@@ -17,9 +17,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <stdint.h>
 
-typedef unsigned long prime_t;
-typedef unsigned long word_t;
+typedef uint64_t prime_t;
+typedef uint64_t word_t;
 #define LOG_WORD_SIZE 6
 
 #define INDEX(i) ((i)>>(LOG_WORD_SIZE))
