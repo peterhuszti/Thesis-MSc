@@ -19,10 +19,15 @@
 #include <limits.h>
 #include <stdint.h>
 #include <iostream>
+#include <math.h>
 
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
 #define LOG_WORD_SIZE 6 // 1 word = 2^(LOG_WORD_SIZE) i.e. 64 bit
+
+#define LOWER_BOUND 1024
+#define UPPER_BOUND 2048 // both should be a power of 2
+#define MAX_NUMBER_OF_CHUNKS 32
 
 #define INDEX(i) ((i)>>(LOG_WORD_SIZE))
 #define MASK(i) ((word_t)(1) << ((i)&(((word_t)(1)<<LOG_WORD_SIZE)-1)))
@@ -139,48 +144,70 @@ void soe_chunk(size_t nbits, word_t* st,
 
 int main()
 {
-	std::cout << "Simple Sieve of Eratosthenese\n";
+	std::cout << "Simple Sieve of Eratosthenese\n\n";
 
-	/**
-	 Allocate `st`.
-	*/
-	size_t log_upper_bound = 13; 
-	size_t n = P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
-	size_t nbits = n * sizeof(word_t) * CHAR_BIT;
-	word_t *st = (word_t*) calloc(sizeof(*st), n);
-	std::cout << "Last candidate: " << I2P(nbits-1) << "\n\n";
-
-	soe_init(nbits, st);
-
-	/* Initialization of chunks */
-	prime_t base = nbits;
-	size_t log_chunk_upper_bound = 10;
-	size_t chunk_size = 1<<(log_chunk_upper_bound - LOG_WORD_SIZE); 
-	size_t chunk_bits = chunk_size * sizeof(word_t) * CHAR_BIT;
-
-	size_t num_chunks = 16;
-	word_t** chunks = (word_t**) malloc(sizeof(word_t*)*num_chunks);
-	word_t* chunk;
+	std::cout << "lower bound " << LOWER_BOUND << std::endl;
+	std::cout << "upper bound " << UPPER_BOUND << std::endl;
 	
-	for(size_t i=0; i<num_chunks; ++i) 
+	size_t chunk_temp = UPPER_BOUND - LOWER_BOUND;
+	size_t number_of_chunks = (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
+	while(number_of_chunks > MAX_NUMBER_OF_CHUNKS)
 	{
-		chunks[i] = (word_t*) calloc( sizeof(word_t), chunk_size);
+		number_of_chunks /= 2;
 	}
 	
-	prime_t chunk_base = base;
+	std::cout << "number of chunks " << number_of_chunks << std::endl;
 	
-	for(size_t i=0; i<num_chunks; ++i)
+	word_t** chunks = (word_t**) malloc(sizeof(word_t*)*number_of_chunks);
+	word_t* chunk;
+	
+	/**
+	 Initialization of chunks 
+	*/
+	chunk_temp /= number_of_chunks;
+	size_t chunk_bits =  chunk_temp <= 64 ? 64 : chunk_temp >> 1;
+	size_t chunk_size = chunk_bits / (sizeof(word_t) * CHAR_BIT);
+
+	std::cout << "chunk_size " << chunk_size << std::endl;
+	std::cout << "chunk_bits " << chunk_bits << std::endl;
+	
+	for(size_t i=0; i<number_of_chunks; ++i) 
 	{
-		soe_chunk(nbits, st, chunk_bits, chunks[i], chunk_base);
-		print_primes_chunk(chunk_bits, chunks[i], chunk_base);
+		chunks[i] = (word_t*) calloc(sizeof(word_t), chunk_size);
+	}
+	
+	/**
+		Allocate `st`.
+	*/
+	word_t last_number = sqrt(UPPER_BOUND);
+	size_t log_upper_bound = log2(last_number + 1);
+	// 2^(log_upper_bound) - 1 is the last number in the sieve table, i.e. last_number
+	
+	std::cout << "last_number " << last_number << std::endl;
+	std::cout << "log_upper_bound " << log_upper_bound << std::endl;
+	
+	size_t n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
+	size_t nbits = n * sizeof(word_t) * CHAR_BIT;
+	word_t *st = (word_t*) calloc(sizeof(*st), n);
+	word_t last = I2P(nbits-1);
+	
+	std::cout << "last candidate: " << last << std::endl;
+	std::cout << "n " << n << std::endl;
+	std::cout << "nbits " << nbits << "\n\n";
+	
+	prime_t chunk_base = LOWER_BOUND / 2;
+	soe_init(nbits, st);
+
+	for(size_t i=0; i<number_of_chunks; ++i) 
+	{
+		soe_chunk( nbits, st, chunk_bits, chunks[i], chunk_base);
+		print_primes_chunk( chunk_bits, chunks[i], chunk_base);
 		chunk_base += chunk_bits;
 	}
 
-	for(size_t i=0; i<num_chunks; i++) free(chunks[i]);
+	for(size_t i=0; i<number_of_chunks; i++) free(chunks[i]);
 	free(chunks);
 	free(st);
-
-	std::cout << "--- the end ---\n";
 
 	return 0;
 }
