@@ -27,7 +27,6 @@ typedef uint64_t word_t;
 
 #define LOWER_BOUND 1024
 #define UPPER_BOUND 2048 // both should be a power of 2
-#define MAX_NUMBER_OF_CHUNKS 32
 
 #define INDEX(i) ((i)>>(LOG_WORD_SIZE))
 #define MASK(i) ((word_t)(1) << ((i)&(((word_t)(1)<<LOG_WORD_SIZE)-1)))
@@ -149,31 +148,13 @@ int main()
 	std::cout << "lower bound " << LOWER_BOUND << std::endl;
 	std::cout << "upper bound " << UPPER_BOUND << std::endl;
 	
-	size_t chunk_temp = UPPER_BOUND - LOWER_BOUND;
-	size_t number_of_chunks = (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
-	while(number_of_chunks > MAX_NUMBER_OF_CHUNKS)
-	{
-		number_of_chunks /= 2;
-	}
+	word_t number_of_words = (UPPER_BOUND - LOWER_BOUND) / (2 * sizeof(word_t) * CHAR_BIT);
+	word_t number_of_bits = number_of_words * sizeof(word_t) * CHAR_BIT;
+	word_t* chunk = new word_t[number_of_words];
+	for(size_t j=0; j<number_of_words; ++j) chunk[j]=0;
 	
-	std::cout << "number of chunks " << number_of_chunks << std::endl;
-	
-	word_t** chunks = (word_t**) malloc(sizeof(word_t*)*number_of_chunks);
-	
-	/**
-	 Initialization of chunks 
-	*/
-	chunk_temp /= number_of_chunks;
-	size_t chunk_bits =  chunk_temp <= 64 ? 64 : chunk_temp >> 1;
-	size_t chunk_size = chunk_bits / (sizeof(word_t) * CHAR_BIT);
-
-	std::cout << "chunk_size " << chunk_size << std::endl;
-	std::cout << "chunk_bits " << chunk_bits << std::endl;
-	
-	for(size_t i=0; i<number_of_chunks; ++i) 
-	{
-		chunks[i] = (word_t*) calloc(sizeof(word_t), chunk_size);
-	}
+	std::cout << "number of words " << number_of_words << std::endl;
+	std::cout << "number of bits " << number_of_bits << std::endl;
 	
 	/**
 		Allocate `st`.
@@ -187,7 +168,9 @@ int main()
 	
 	size_t n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 	size_t nbits = last_number / 2 + 1;
-	word_t *st = (word_t*) calloc(sizeof(*st), n);
+	
+	word_t* st = new word_t[n];
+	for(size_t j=0; j<n; ++j) st[j]=0;
 	
 	std::cout << "n " << n << std::endl;
 	std::cout << "nbits " << nbits << "\n\n";
@@ -195,17 +178,13 @@ int main()
 	prime_t chunk_base = LOWER_BOUND / 2;
 	soe_init(nbits, st);
 
+	soe_chunk(nbits, st, number_of_bits, chunk, chunk_base);
+	
 	std::cout << "The found primes in the given interval:\n";
-	for(size_t i=0; i<number_of_chunks; ++i) 
-	{
-		soe_chunk(nbits, st, chunk_bits, chunks[i], chunk_base);
-		print_primes_chunk( chunk_bits, chunks[i], chunk_base);
-		chunk_base += chunk_bits;
-	}
+	print_primes_chunk( number_of_bits, chunk, chunk_base);
 
-	for(size_t i=0; i<number_of_chunks; i++) free(chunks[i]);
-	free(chunks);
-	free(st);
+	delete[] chunk;
+	delete[] st;
 
 	std::cout << "--- the end ---\n";
 	
