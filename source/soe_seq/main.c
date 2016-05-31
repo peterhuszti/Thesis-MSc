@@ -187,17 +187,16 @@ int main()
 	std::cout << "log_upper_bound " << log_upper_bound << std::endl;
 	
 	size_t n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
-	size_t nbits = n * sizeof(word_t) * CHAR_BIT;
+	size_t nbits = last_number / 2 + 1;
 	word_t *st = (word_t*) calloc(sizeof(*st), n);
-	word_t last = I2P(nbits-1);
 	
-	std::cout << "last candidate: " << last << std::endl;
 	std::cout << "n " << n << std::endl;
 	std::cout << "nbits " << nbits << "\n\n";
 	
 	prime_t chunk_base = LOWER_BOUND / 2;
 	soe_init(nbits, st);
 
+	std::cout << "The found primes in the given interval:\n";
 	for(size_t i=0; i<number_of_chunks; ++i) 
 	{
 		soe_chunk( nbits, st, chunk_bits, chunks[i], chunk_base);
@@ -209,5 +208,7 @@ int main()
 	free(chunks);
 	free(st);
 
+	std::cout << "--- the end ---\n";
+	
 	return 0;
 }
