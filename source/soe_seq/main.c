@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <stdint.h>
+#include <iostream>
 
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
@@ -39,21 +40,21 @@ void print_table(size_t n, word_t *p)
 {
 	for(size_t i=n; i>0; --i)
 		printf("%08lx ",p[i-1]);
-	printf("\n");
+	std::cout << std::endl;
 }
 
 void print_primes(size_t nbits, word_t *st)
 {
 	for(size_t i=0; i<nbits; i++) 
-		if(! GET(st,i)) printf("%lu, ", I2P(i));
-	printf("\n");
+		if(! GET(st,i)) std::cout << I2P(i) << ", ";
+	std::cout << std::endl;
 }
 
 void print_primes_chunk(size_t nbits, word_t *st, size_t base)
 {
 	for(size_t i=0; i<nbits; i++)
-		if(! GET( st, i )) printf("%lu, ", I2P(i + base));
-	printf("\n");
+		if(! GET( st, i )) std::cout << I2P(i + base) << ", ";
+	std::cout << std::endl;
 }
 
 
@@ -138,7 +139,7 @@ void soe_chunk(size_t nbits, word_t* st,
 
 int main()
 {
-	printf("Simple Sieve of Eratosthenese\n");
+	std::cout << "Simple Sieve of Eratosthenese\n";
 
 	/**
 	 Allocate `st`.
@@ -147,7 +148,7 @@ int main()
 	size_t n = P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 	size_t nbits = n * sizeof(word_t) * CHAR_BIT;
 	word_t *st = (word_t*) calloc(sizeof(*st), n);
-	printf("Last candidate: %lu\n\n", I2P(nbits-1));
+	std::cout << "Last candidate: " << I2P(nbits-1) << "\n\n";
 
 	soe_init(nbits, st);
 
@@ -179,7 +180,7 @@ int main()
 	free(chunks);
 	free(st);
 
-	printf("--- the end ---\n");
+	std::cout << "--- the end ---\n";
 
 	return 0;
 }
