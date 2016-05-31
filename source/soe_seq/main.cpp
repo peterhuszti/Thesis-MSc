@@ -1,5 +1,5 @@
 /*
-	author: Emil Vatai
+	author: Peter Huszti, Emil Vatai
 	source: https://github.com/vatai/simple_soe/blob/master/simple_soe.c
  */
 
@@ -159,7 +159,6 @@ int main()
 	std::cout << "number of chunks " << number_of_chunks << std::endl;
 	
 	word_t** chunks = (word_t**) malloc(sizeof(word_t*)*number_of_chunks);
-	word_t* chunk;
 	
 	/**
 	 Initialization of chunks 
@@ -199,7 +198,7 @@ int main()
 	std::cout << "The found primes in the given interval:\n";
 	for(size_t i=0; i<number_of_chunks; ++i) 
 	{
-		soe_chunk( nbits, st, chunk_bits, chunks[i], chunk_base);
+		soe_chunk(nbits, st, chunk_bits, chunks[i], chunk_base);
 		print_primes_chunk( chunk_bits, chunks[i], chunk_base);
 		chunk_base += chunk_bits;
 	}
