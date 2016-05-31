@@ -158,7 +158,7 @@ int main()
 	
 	std::cout << "number of chunks " << number_of_chunks << std::endl;
 	
-	word_t** chunks = (word_t**) malloc(sizeof(word_t*)*number_of_chunks);
+	word_t** chunks = new word_t*[number_of_chunks];
 	
 	/**
 	 Initialization of chunks 
@@ -172,12 +172,10 @@ int main()
 	
 	for(size_t i=0; i<number_of_chunks; ++i) 
 	{
-		chunks[i] = (word_t*) calloc(sizeof(word_t), chunk_size);
+		chunks[i] = new word_t[chunk_size];
+		for(size_t j=0; j<chunk_size; ++j) chunks[i][j]=0;
 	}
 	
-	/**
-		Allocate `st`.
-	*/
 	word_t last_number = sqrt(UPPER_BOUND);
 	size_t log_upper_bound = log2(last_number + 1);
 	// 2^(log_upper_bound) - 1 is the last number in the sieve table, i.e. last_number
@@ -187,7 +185,12 @@ int main()
 	
 	size_t n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 	size_t nbits = last_number / 2 + 1;
-	word_t *st = (word_t*) calloc(sizeof(*st), n);
+	
+	/**
+	 Allocate `st`.
+	*/
+	word_t* st = new word_t[n];
+	for(size_t j=0; j<n; ++j) st[j]=0;
 	
 	std::cout << "n " << n << std::endl;
 	std::cout << "nbits " << nbits << "\n\n";
@@ -203,9 +206,9 @@ int main()
 		chunk_base += chunk_bits;
 	}
 
-	for(size_t i=0; i<number_of_chunks; i++) free(chunks[i]);
-	free(chunks);
-	free(st);
+	for(size_t i=0; i<number_of_chunks; i++) delete[] chunks[i];
+	delete[] chunks;
+	delete[] st;
 
 	std::cout << "--- the end ---\n";
 	
