@@ -4,12 +4,12 @@
  */
 
 /**
-   This program is a simple implementation of the
+   This program is a naive implementation of the
    sieve of Eratosthenes (SOE).  It consists of two stages:
    - Stage 1: sieving out the "small" primes, i.e. from 0 to some
      smaller bound 'nbits'.
-   - Stage 2: using the primes/sieve table from stage 1, sieve chunks
-     starting from a given base.
+   - Stage 2: using the primes/sieve table from stage 1, sieve the 
+     numbers starting from a given base.
    Here of course, nbits*nbits > base should be true.
  */
 
@@ -29,10 +29,7 @@ int main()
 	
 	std::cout << "number of words " << number_of_words << std::endl;
 	std::cout << "number of bits " << number_of_bits << std::endl;
-	
-	/**
-		Allocate `st`.
-	*/
+
 	word_t last_number = sqrt(UPPER_BOUND);
 	size_t log_upper_bound = log2(last_number + 1);
 	// 2^(log_upper_bound) - 1 is the last number in the sieve table, i.e. last_number
@@ -43,6 +40,9 @@ int main()
 	size_t n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 	size_t nbits = last_number / 2 + 1;
 	
+	/**
+		Allocate `st`.
+	*/
 	word_t* st = new word_t[n];
 	for(size_t j=0; j<n; ++j) st[j]=0;
 	
@@ -55,7 +55,7 @@ int main()
 	soe_chunk(nbits, st, number_of_bits, chunk, chunk_base);
 	
 	std::cout << "The found primes in the given interval:\n";
-	print_primes_chunk( number_of_bits, chunk, chunk_base);
+	print_primes_chunk(number_of_bits, chunk, chunk_base);
 
 	delete[] chunk;
 	delete[] st;

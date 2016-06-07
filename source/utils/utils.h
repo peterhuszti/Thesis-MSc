@@ -1,3 +1,8 @@
+/*
+	author: Peter Huszti, Emil Vatai
+	source: https://github.com/vatai/simple_soe/blob/master/simple_soe.c
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +25,6 @@ typedef uint64_t word_t;
 #define RESET(p,i) (p[INDEX(i)]&=~MASK(i))
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
-
 
 /**
    Print/debug functions.
@@ -111,10 +115,10 @@ void soe_chunk(size_t nbits, word_t* st,
 		if(! GET(st,i)) // if it's a prime, then we sieve
 		{
 			prime_t p = I2P(i); // the prime in dec
-			prime_t q = I2P( base );  // the first number in the chunk
+			prime_t q = I2P(base);  // the first number in the chunk
 			
 			assert(p<q);
-			q = negmodp2I( q, p ); // calculate offset
+			q = negmodp2I(q, p); // calculate offset
 			
 			while(q < chunk_bits) // while we are in the chunk
 			{

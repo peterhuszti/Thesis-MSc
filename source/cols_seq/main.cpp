@@ -4,7 +4,7 @@
  */
 
 /**
-   @file: simple_soe.c This program is a simple implementation of the
+   This program is a simple implementation of the
    sieve of Eratosthenes (SOE).  It consists of two stages:
    - Stage 1: sieving out the "small" primes, i.e. from 0 to some
      smaller bound 'nbits'.
@@ -33,19 +33,18 @@ int main()
 	
 	std::cout << "number of chunks " << number_of_chunks << std::endl;
 	
-	word_t** chunks = new word_t*[number_of_chunks];
-	
-	/**
-	 Initialization of chunks 
-	*/
 	chunk_temp /= number_of_chunks;
 	size_t chunk_bits =  chunk_temp <= 64 ? 64 : chunk_temp >> 1;
 	size_t chunk_size = chunk_bits / (sizeof(word_t) * CHAR_BIT);
-
+	
+	/**
+		Initialization of chunks 
+	*/
 	std::cout << "chunk_size " << chunk_size << std::endl;
 	std::cout << "chunk_bits " << chunk_bits << std::endl;
 	
-	for(size_t i=0; i<number_of_chunks; ++i) 
+	word_t** chunks = new word_t*[number_of_chunks];
+	for(size_t i=0; i<number_of_chunks; ++i)
 	{
 		chunks[i] = new word_t[chunk_size];
 		for(size_t j=0; j<chunk_size; ++j) chunks[i][j]=0;
@@ -62,7 +61,7 @@ int main()
 	size_t nbits = last_number / 2 + 1;
 	
 	/**
-	 Allocate `st`.
+		Allocate `st`.
 	*/
 	word_t* st = new word_t[n];
 	for(size_t j=0; j<n; ++j) st[j]=0;
@@ -77,7 +76,7 @@ int main()
 	for(size_t i=0; i<number_of_chunks; ++i) 
 	{
 		soe_chunk(nbits, st, chunk_bits, chunks[i], chunk_base);
-		print_primes_chunk( chunk_bits, chunks[i], chunk_base);
+		print_primes_chunk(chunk_bits, chunks[i], chunk_base);
 		chunk_base += chunk_bits;
 	}
 
