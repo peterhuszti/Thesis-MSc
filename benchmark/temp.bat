@@ -1,7 +1,7 @@
 @echo off
 
-g++ -o ..\source\soe_seq\a ..\source\soe_seq\main.cpp
-g++ -o ..\source\cols_seq\a ..\source\cols_seq\main.cpp
+g++ -o ..\source\soe_seq\a -O3 ..\source\soe_seq\main.cpp
+g++ -o ..\source\cols_seq\a -O3 ..\source\cols_seq\main.cpp
 
 set "soeSeqStartTime=%time%"
 ..\source\soe_seq\a.exe

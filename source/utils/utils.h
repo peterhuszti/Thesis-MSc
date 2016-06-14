@@ -15,8 +15,8 @@ typedef uint64_t prime_t;
 typedef uint64_t word_t;
 #define LOG_WORD_SIZE 6 // 1 word = 2^(LOG_WORD_SIZE) i.e. 64 bit
 
-#define LOWER_BOUND 1024
-#define UPPER_BOUND 2048 // both should be a power of 2
+#define LOWER_BOUND 536870912
+#define UPPER_BOUND 1073741824 // both should be a power of 2
 
 #define INDEX(i) ((i)>>(LOG_WORD_SIZE))
 #define MASK(i) ((word_t)(1) << ((i)&(((word_t)(1)<<LOG_WORD_SIZE)-1)))
@@ -25,6 +25,8 @@ typedef uint64_t word_t;
 #define RESET(p,i) (p[INDEX(i)]&=~MASK(i))
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
+
+#define DEBUG false
 
 /**
    Print/debug functions.
@@ -43,10 +45,14 @@ void print_primes(size_t nbits, word_t *st)
 	std::cout << std::endl;
 }
 
-void print_primes_chunk(size_t nbits, word_t *st, size_t base)
+void print_primes_chunk(size_t nbits, word_t *st, size_t base, int number_of_primes_found)
 {
 	for(size_t i=0; i<nbits; i++)
-		if(! GET( st, i )) std::cout << I2P(i + base) << ", ";
+		if(! GET( st, i )) 
+		{
+			std::cout << I2P(i + base) << ", ";
+			number_of_primes_found++;
+		}
 	std::cout << std::endl;
 }
 
@@ -117,7 +123,6 @@ void soe_chunk(size_t nbits, word_t* st,
 			prime_t p = I2P(i); // the prime in dec
 			prime_t q = I2P(base);  // the first number in the chunk
 			
-			assert(p<q);
 			q = negmodp2I(q, p); // calculate offset
 			
 			while(q < chunk_bits) // while we are in the chunk
