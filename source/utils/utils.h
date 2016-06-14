@@ -3,7 +3,9 @@
 	source: https://github.com/vatai/simple_soe/blob/master/simple_soe.c
  */
 
-#include <assert.h>
+#ifndef UTILS
+#define UTILS
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -11,8 +13,6 @@
 #include <iostream>
 #include <math.h>
 
-typedef uint64_t prime_t;
-typedef uint64_t word_t;
 #define LOG_WORD_SIZE 6 // 1 word = 2^(LOG_WORD_SIZE) i.e. 64 bit
 
 #define LOWER_BOUND 536870912
@@ -26,35 +26,14 @@ typedef uint64_t word_t;
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG false
+#define DEBUG false // true if we want to print debug info
+ 
+typedef uint64_t prime_t;
+typedef uint64_t word_t;
 
-/**
-   Print/debug functions.
-*/
-void print_table(size_t n, word_t *p)
-{
-	for(size_t i=n; i>0; --i)
-		printf("%08lx ",p[i-1]);
-	std::cout << std::endl;
-}
-
-void print_primes(size_t nbits, word_t *st)
-{
-	for(size_t i=0; i<nbits; i++) 
-		if(! GET(st,i)) std::cout << I2P(i) << ", ";
-	std::cout << std::endl;
-}
-
-void print_primes_chunk(size_t nbits, word_t *st, size_t base, int number_of_primes_found)
-{
-	for(size_t i=0; i<nbits; i++)
-		if(! GET( st, i )) 
-		{
-			std::cout << I2P(i + base) << ", ";
-			number_of_primes_found++;
-		}
-	std::cout << std::endl;
-}
+#if DEBUG
+#include "debug.h"
+#endif
 
 /**
    Stage 1: soe_init() implements the sieving of "small" primes.  
@@ -133,3 +112,5 @@ void soe_chunk(size_t nbits, word_t* st,
 		}
 	}
 }
+
+#endif
