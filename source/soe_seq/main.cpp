@@ -13,77 +13,24 @@
    Here of course, nbits*nbits > base should be true.
  */
 
-#include "../utils/utils.h"
+#include "../utils/Siever.h"
+
+#define MAX_NUMBER_OF_CHUNKS 1
 
 int main()
 {	
-	/**
-		Initial calculations
-	*/
-	word_t number_of_words = (UPPER_BOUND - LOWER_BOUND) / (2 * sizeof(word_t) * CHAR_BIT);
-	word_t number_of_bits = number_of_words * sizeof(word_t) * CHAR_BIT;
-	word_t* chunk = new word_t[number_of_words];
-	for(size_t j=0; j<number_of_words; ++j) chunk[j]=0;
+	Siever siever(MAX_NUMBER_OF_CHUNKS);
 
-	word_t last_number = sqrt(UPPER_BOUND);
-	size_t log_upper_bound = log2(last_number + 1);
-	// 2^(log_upper_bound) - 1 is the last number in the sieve table, i.e. last_number
+	siever.soe_init();
 	
-	size_t n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
-	size_t nbits = last_number / 2 + 1;
-	
-	/**
-		Allocate `st`.
-	*/
-	word_t* st = new word_t[n];
-	for(size_t j=0; j<n; ++j) st[j]=0;
-	
-	/**
-		Initialize `st`.
-	*/
-	prime_t chunk_base = LOWER_BOUND / 2;
-	soe_init(nbits, st);
+	siever.soe_chunks();
 
-	/**
-		Sieve
-	*/
-	soe_chunk(nbits, st, number_of_bits, chunk, chunk_base);
-
-	/**
-		Print debug info
-	*/
 	#if DEBUG
-		std::cout << "Simple Sieve of Eratosthenese\n\n";
-
-		std::cout << "lower bound " << LOWER_BOUND << std::endl;
-		std::cout << "upper bound " << UPPER_BOUND << std::endl;
-			
-		std::cout << "number of words " << number_of_words << std::endl;
-		std::cout << "number of bits " << number_of_bits << std::endl;
-		
-		std::cout << "last_number " << last_number << std::endl;
-		std::cout << "log_upper_bound " << log_upper_bound << std::endl;
-		
-		std::cout << "n " << n << std::endl;
-		std::cout << "nbits " << nbits << "\n\n";
-			
-		std::cout << "The found primes in the given interval:\n";
-		
-		int number_of_primes_found = 0;
-		
-		// print found primes
-		number_of_primes_found += print_primes_chunk(number_of_bits, chunk, chunk_base);
-		
-		std::cout << "The number of found primes: " << number_of_primes_found << std::endl;
-		
-		std::cout << "--- the end ---\n";
-	#endif	
-		
-	/**
-		Clean-up.
-	*/
-	delete[] chunk;
-	delete[] st;
+		siever.print_debug_info();
+		siever.print_sieving_table();
+		siever.print_primes_found();
+		siever.print_number_of_found_primes();
+	#endif
 		
 	return 0;
 }
