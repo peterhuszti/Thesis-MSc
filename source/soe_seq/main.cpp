@@ -17,6 +17,9 @@
 
 int main()
 {	
+	/**
+		Initial calculations
+	*/
 	word_t number_of_words = (UPPER_BOUND - LOWER_BOUND) / (2 * sizeof(word_t) * CHAR_BIT);
 	word_t number_of_bits = number_of_words * sizeof(word_t) * CHAR_BIT;
 	word_t* chunk = new word_t[number_of_words];
@@ -35,9 +38,15 @@ int main()
 	word_t* st = new word_t[n];
 	for(size_t j=0; j<n; ++j) st[j]=0;
 	
+	/**
+		Initialize `st`.
+	*/
 	prime_t chunk_base = LOWER_BOUND / 2;
 	soe_init(nbits, st);
 
+	/**
+		Sieve
+	*/
 	soe_chunk(nbits, st, number_of_bits, chunk, chunk_base);
 
 	/**
@@ -62,13 +71,17 @@ int main()
 		
 		int number_of_primes_found = 0;
 		
-		print_primes_chunk(number_of_bits, chunk, chunk_base, number_of_primes_found);
+		// print found primes
+		number_of_primes_found += print_primes_chunk(number_of_bits, chunk, chunk_base);
 		
 		std::cout << "The number of found primes: " << number_of_primes_found << std::endl;
 		
 		std::cout << "--- the end ---\n";
 	#endif	
 		
+	/**
+		Clean-up.
+	*/
 	delete[] chunk;
 	delete[] st;
 		

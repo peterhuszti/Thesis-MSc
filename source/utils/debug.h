@@ -20,8 +20,10 @@ void print_primes(size_t nbits, word_t *st)
 	std::cout << std::endl;
 }
 
-void print_primes_chunk(size_t nbits, word_t *st, size_t base, int number_of_primes_found)
+int print_primes_chunk(size_t nbits, word_t *st, size_t base)
 {
+	int number_of_primes_found = 0;
+	
 	for(size_t i=0; i<nbits; i++)
 		if(! GET( st, i )) 
 		{
@@ -29,4 +31,6 @@ void print_primes_chunk(size_t nbits, word_t *st, size_t base, int number_of_pri
 			number_of_primes_found++;
 		}
 	std::cout << std::endl;
+	
+	return number_of_primes_found;
 }
