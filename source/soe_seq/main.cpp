@@ -14,6 +14,7 @@
  */
 
 #include "../utils/Siever.h"
+#include "../utils/Printer.h"
 
 #define MAX_NUMBER_OF_CHUNKS 1
 
@@ -26,10 +27,12 @@ int main()
 	siever.soe_chunks();
 
 	#if DEBUG
-		siever.print_debug_info();
-		siever.print_sieving_table();
-		siever.print_primes_found();
-		siever.print_number_of_found_primes();
+		Printer printer(&siever);
+	
+		printer.print_debug_info();
+		printer.print_sieving_table();
+		printer.print_primes_found();
+		printer.print_number_of_found_primes();
 	#endif
 		
 	return 0;

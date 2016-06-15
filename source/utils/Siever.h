@@ -15,10 +15,10 @@
 
 #define LOG_WORD_SIZE 6 // 1 word = 2^(LOG_WORD_SIZE) i.e. 64 bit
 
-#define LOWER_BOUND 536870912
-#define UPPER_BOUND 1073741824 // both should be a power of 2
-// #define LOWER_BOUND 1024
-// #define UPPER_BOUND 2048 // both should be a power of 2
+// #define LOWER_BOUND 536870912
+// #define UPPER_BOUND 1073741824 // both should be a power of 2
+#define LOWER_BOUND 1024
+#define UPPER_BOUND 2048 // both should be a power of 2
 
 #define INDEX(i) ((i)>>(LOG_WORD_SIZE))
 #define MASK(i) ((word_t)(1) << ((i)&(((word_t)(1)<<LOG_WORD_SIZE)-1)))
@@ -28,7 +28,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG false // true if we want to print debug info
+#define DEBUG true // true if we want to print debug info
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
@@ -41,16 +41,16 @@ private:
 	/**
 		Fields
 	*/
-	word_t last_number;
+	word_t last_number; // last number in the sieving table
 	size_t log_upper_bound; // 2^(log_upper_bound) - 1 is the last number in the sieve table, i.e. last_number
-	size_t n;
+	size_t size_of_st; // size of st in words
 	size_t nbits; // effective number bits
-	size_t number_of_chunks;
-	word_t chunk_bits;
-	word_t chunk_size;
-	prime_t chunk_base;
+	size_t number_of_chunks; // actual number of chunks
+	word_t chunk_bits; // number of bits in each chunk
+	word_t chunk_size; // size of chunks in words
+	prime_t chunk_base; // first number in the searched interval
 	
-	word_t* st;
+	word_t* st; // sieving table
 	word_t** chunks;
 	
 public:	
@@ -63,7 +63,7 @@ public:
 		last_number = sqrt(UPPER_BOUND);
 		log_upper_bound = log2(last_number + 1);
 		
-		n = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
+		size_of_st = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 		nbits = last_number / 2 + 1;
 		
 		size_t chunk_temp = UPPER_BOUND - LOWER_BOUND;
@@ -82,8 +82,8 @@ public:
 		/**
 			Allocate `st`.
 		*/
-		st = new word_t[n];
-		for(size_t j=0; j<n; ++j) st[j]=0;
+		st = new word_t[size_of_st];
+		for(size_t j=0; j<size_of_st; ++j) st[j]=0;
 		
 		/**
 			Initialization of chunks 
@@ -96,11 +96,11 @@ public:
 		}
 	}
 	
+	/**
+		Clean-up.
+	*/
 	~Siever()
 	{
-		/**
-			Clean-up.
-		*/
 		for(size_t i=0; i<number_of_chunks; i++) delete[] chunks[i];
 		delete[] chunks;
 		delete[] st;
@@ -132,9 +132,8 @@ public:
 	
 	/**
 	   Performs SOE on the chunks with primes read from the sieve table `st`
-	   of size `nbits` (effective number bits).  A chunk (at `chunk`) is a
-	   chunk of a sieve table of bits from `base` to `base+chunk_bits-1`
-	   bits.
+	   of size `nbits`.  A chunk is a chunk of a sieve table of 
+	   bits from `base` to `base+chunk_bits-1` bits.
 	 */
 	void soe_chunks()
 	{
@@ -166,74 +165,7 @@ public:
 	/**
 		Print/debug functions.
 	*/
-	void print_debug_info()
-	{
-		std::cout << "Sieve of Eratosthenese\n\n";
-		
-		std::cout << "lower bound " << LOWER_BOUND << std::endl;
-		std::cout << "upper bound " << UPPER_BOUND << std::endl;
-		
-		std::cout << "number of chunks " << number_of_chunks << std::endl;
-		
-		std::cout << "chunk_size " << chunk_size << std::endl;
-		std::cout << "chunk_bits " << chunk_bits << std::endl;
-		
-		std::cout << "last_number " << last_number << std::endl;
-		std::cout << "log_upper_bound " << log_upper_bound << std::endl;
-			
-		std::cout << "n " << n << std::endl;
-		std::cout << "nbits " << nbits << "\n\n";
-	}
-	
-	void print_primes_found()
-	{
-		std::cout << "The found primes in the given interval:\n";
-		
-		prime_t chunk_base_temp = chunk_base;
-		
-		for(size_t j=0; j<number_of_chunks; ++j)
-		{
-			for(size_t i=0; i<chunk_bits; ++i)
-				if(! GET( chunks[j], i )) 
-				{
-					std::cout << I2P(i + chunk_base_temp) << ", ";
-				}
-			std::cout << std::endl;
-			
-			chunk_base_temp += chunk_bits;
-		}
-		
-		std::cout << std::endl;
-	}
-	
-	void print_sieving_table()
-	{
-		std::cout << "The sieving table:\n";
-		
-		for(size_t i=0; i<nbits; i++) 
-			if(! GET(st,i)) std::cout << I2P(i) << ", ";
-		std::cout << "\n\n";
-	}
-	
-	void print_number_of_found_primes()
-	{
-		std::cout << "The number of found primes: ";
-	
-		int number_of_found_primes = 0;
-		prime_t chunk_base_temp = chunk_base;
-		
-		for(size_t j=0; j<number_of_chunks; ++j)
-		{
-			for(size_t i=0; i<chunk_bits; ++i)
-				if(! GET( chunks[j], i )) 
-				{
-					number_of_found_primes++;
-				}
-			chunk_base_temp += chunk_bits;
-		}
-		
-		std::cout << number_of_found_primes << std::endl;
-	}
+	friend class Printer;
 	
 private:
 
