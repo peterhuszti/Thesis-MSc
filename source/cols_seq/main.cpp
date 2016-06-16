@@ -17,28 +17,20 @@
 
 #include "../utils/Siever.h"
 #include "../utils/Printer.h"
+#include "../utils/utils.h"
  
 #define MAX_NUMBER_OF_CHUNKS 128
-
-#define CONFIG "../utils/config.txt"
 
 int main()
 {	
 	word_t lower_bound = 0; // both should be a power of 2
 	word_t upper_bound = 0;
 
-	/**
-		Read config file
-	*/
-	std::ifstream read_config;
-	read_config.open(CONFIG);
-	char line[64];
-	read_config.getline(line, 64, ' ');
-	read_config >> lower_bound;
-	read_config.getline(line, 64, ' ');
-	read_config >> upper_bound;
-	read_config.close();
-
+	auto bounds = read_config();
+		
+	lower_bound = bounds.first;
+	upper_bound = bounds.second;
+	
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 
 	siever.soe_init();
