@@ -1,17 +1,20 @@
 @echo off
 
-g++ -o ..\source\soe_seq\a -O3 ..\source\soe_seq\main.cpp
-g++ -o ..\source\cols_seq\a -O3 ..\source\cols_seq\main.cpp
+cd ..\source\soe_seq
+g++ -o soe_seq -O3 main.cpp
 
 set "soeSeqStartTime=%time%"
-..\source\soe_seq\a.exe
+soe_seq.exe
 set "soeSeqStopTime=%time%"
 call :timeToMS time1 "%soeSeqStartTime"
 call :timeToMS time2 "%soeSeqStopTime"
 set /a soeSeqTotalTime=time2-time1
 
+cd ..\cols_seq
+g++ -o cols_seq -O3 main.cpp
+
 set "colsSeqStartTime=%time%"
-..\source\cols_seq\a.exe
+cols_seq.exe
 set "colsSeqStopTime=%time%"
 call :timeToMS time1 "%colsSeqStartTime"
 call :timeToMS time2 "%colsSeqStopTime"

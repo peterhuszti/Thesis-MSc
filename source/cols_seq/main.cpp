@@ -12,18 +12,36 @@
      starting from a given base.
    Here of course, nbits*nbits > base should be true.
  */
+ 
+#include <fstream>
 
 #include "../utils/Siever.h"
 #include "../utils/Printer.h"
  
 #define MAX_NUMBER_OF_CHUNKS 128
 
+#define CONFIG "../utils/config.txt"
+
 int main()
 {	
-	Siever siever(MAX_NUMBER_OF_CHUNKS);
+	word_t lower_bound = 0; // both should be a power of 2
+	word_t upper_bound = 0;
+
+	/**
+		Read config file
+	*/
+	std::ifstream read_config;
+	read_config.open(CONFIG);
+	char line[64];
+	read_config.getline(line, 64, ' ');
+	read_config >> lower_bound;
+	read_config.getline(line, 64, ' ');
+	read_config >> upper_bound;
+	read_config.close();
+
+	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 
 	siever.soe_init();
-	
 	siever.soe_chunks();
 	
 	#if DEBUG

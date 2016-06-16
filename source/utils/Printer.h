@@ -6,8 +6,6 @@
 #ifndef PRINTER
 #define PRINTER
 
-#include "Siever.h"
-
 class Printer
 {
 
@@ -23,8 +21,8 @@ public:
 	{
 		std::cout << "Sieve of Eratosthenese\n\n";
 		
-		std::cout << "lower bound " << LOWER_BOUND << std::endl;
-		std::cout << "upper bound " << UPPER_BOUND << std::endl;
+		std::cout << "lower bound " << siever->lower_bound << std::endl;
+		std::cout << "upper bound " << siever->upper_bound << std::endl;
 		
 		std::cout << "number of chunks " << siever->number_of_chunks << std::endl;
 		
