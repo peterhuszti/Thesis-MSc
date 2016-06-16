@@ -6,19 +6,11 @@
 #ifndef SIEVER
 #define SIEVER
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
 #include <stdint.h>
 #include <iostream>
 #include <math.h>
 
 #define LOG_WORD_SIZE 6 // 1 word = 2^(LOG_WORD_SIZE) i.e. 64 bit
-
-// #define LOWER_BOUND 536870912
-// #define UPPER_BOUND 1073741824 // both should be a power of 2
-#define LOWER_BOUND 1024
-#define UPPER_BOUND 2048 // both should be a power of 2
 
 #define INDEX(i) ((i)>>(LOG_WORD_SIZE))
 #define MASK(i) ((word_t)(1) << ((i)&(((word_t)(1)<<LOG_WORD_SIZE)-1)))
@@ -28,7 +20,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG true // true if we want to print debug info
+#define DEBUG false // true if we want to print debug info
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
@@ -41,11 +33,13 @@ private:
 	/**
 		Fields
 	*/
+	word_t lower_bound;
+	word_t upper_bound;
 	word_t last_number; // last number in the sieving table
 	size_t log_upper_bound; // 2^(log_upper_bound) - 1 is the last number in the sieve table, i.e. last_number
 	size_t size_of_st; // size of st in words
 	size_t nbits; // effective number bits
-	size_t number_of_chunks; // actual number of chunks
+	word_t number_of_chunks; // actual number of chunks
 	word_t chunk_bits; // number of bits in each chunk
 	word_t chunk_size; // size of chunks in words
 	prime_t chunk_base; // first number in the searched interval
@@ -55,18 +49,20 @@ private:
 	
 public:	
 
-	Siever(size_t max_number_of_chunks)
+	Siever(word_t max_number_of_chunks, word_t low, word_t up): 
+		lower_bound(low)
+		, upper_bound(up)
 	{
 		/**
 			Initial calculations.
 		*/
-		last_number = sqrt(UPPER_BOUND);
+		last_number = sqrt(upper_bound);
 		log_upper_bound = log2(last_number + 1);
 		
 		size_of_st = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 		nbits = last_number / 2 + 1;
 		
-		size_t chunk_temp = UPPER_BOUND - LOWER_BOUND;
+		word_t chunk_temp = upper_bound - lower_bound;
 		number_of_chunks = max_number_of_chunks == 1 ? 1 : (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
 		while(number_of_chunks > max_number_of_chunks)
 		{
@@ -77,7 +73,7 @@ public:
 		chunk_bits = chunk_temp <= 64 ? 64 : chunk_temp >> 1;
 		chunk_size = chunk_bits / (sizeof(word_t) * CHAR_BIT);
 		
-		chunk_base = LOWER_BOUND / 2;
+		chunk_base = lower_bound / 2;
 		
 		/**
 			Allocate `st`.
