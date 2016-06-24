@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-#define CONFIG "../utils/config1.txt"
+#define CONFIG "../utils/config5.txt"
 
 std::pair<word_t,word_t> read_config()
 {

@@ -22,7 +22,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG true // true if we want to print debug info
+#define DEBUG false // true if we want to print debug info
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
@@ -167,7 +167,7 @@ public:
 			}
 			indices[j] = j;
 			
-			std::cout << first_chunk_to_sieve[j] << "   \n";
+			// std::cout << first_chunk_to_sieve[j] << "   \n";
 		}
 	
 		for(size_t j=0; j<number_of_threads; ++j)
@@ -190,9 +190,9 @@ public:
 	{
 		for(int j=0; j<(*number_of_chunks_to_sieve); ++j)
 		{
-			std::cout << std::endl;
-			std::cout << *index_of_thread << "  " << j << "  " << *offset << "  " << *first_chunk_to_sieve+j;
-			std::cout << std::endl;
+			// std::cout << std::endl;
+			// std::cout << *index_of_thread << "  " << j << "  " << *offset << "  " << *first_chunk_to_sieve+j;
+			// std::cout << std::endl;
 			for(size_t i=1; i<siever->nbits; ++i) // start from 1 if 1 is in primes
 			{
 				if(! GET(siever->st,i)) // if it's a prime, then we sieve
