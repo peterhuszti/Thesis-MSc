@@ -34,6 +34,10 @@ public:
 			
 		std::cout << "size of st " << siever->size_of_st << std::endl;
 		std::cout << "nbits " << siever->nbits << "\n\n";
+		
+		std::cout << "number of threads " << siever->number_of_threads << std::endl;
+		std::cout << "chunk per thread " << siever->chunk_per_thread << std::endl;
+		std::cout << "plus one sieve " << siever->plus_one_sieve << std::endl;
 	}
 	
 	void print_primes_found()

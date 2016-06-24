@@ -1,6 +1,5 @@
 /*
-	author: Peter Huszti, Emil Vatai
-	source: https://github.com/vatai/simple_soe/blob/master/simple_soe.c
+	author: Peter Huszti
  */
 
 /**
@@ -20,6 +19,7 @@
 #include "../utils/utils.h"
 
 #define MAX_NUMBER_OF_CHUNKS 1
+#define NUMBER_OF_THREADS 1 // should be < number chunks
 
 int main()
 {
@@ -31,15 +31,18 @@ int main()
 	lower_bound = bounds.first;
 	upper_bound = bounds.second;
 	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
+	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, NUMBER_OF_THREADS);
 	
-	siever.soe_init();
-	siever.soe_chunks();
-
 	#if DEBUG
 		Printer printer(&siever);
 	
 		printer.print_debug_info();
+	#endif
+	
+	siever.soe_init();
+	siever.soe_chunks();
+	
+	#if DEBUG
 		printer.print_sieving_table();
 		printer.print_primes_found();
 		printer.print_number_of_found_primes();

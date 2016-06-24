@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <iostream>
 #include <math.h>
+#include <vector>
+#include <thread>
 
 #define LOG_WORD_SIZE 6 // 1 word = 2^(LOG_WORD_SIZE) i.e. 64 bit
 
@@ -20,7 +22,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG false // true if we want to print debug info
+#define DEBUG true // true if we want to print debug info
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
@@ -43,15 +45,20 @@ private:
 	word_t chunk_bits; // number of bits in each chunk
 	word_t chunk_size; // size of chunks in words
 	prime_t chunk_base; // first number in the searched interval
+	int number_of_threads;
+	int chunk_per_thread;
+	int plus_one_sieve; // how many thread have to sieve one more chunk than the others (< number_of_threads)
 	
 	word_t* st; // sieving table
 	word_t** chunks;
+	std::vector<std::thread> threads;
 	
 public:	
 
-	Siever(word_t max_number_of_chunks, word_t low, word_t up): 
+	Siever(word_t max_number_of_chunks, word_t low, word_t up, int num_thread): 
 		lower_bound(low)
 		, upper_bound(up)
+		, number_of_threads(num_thread)
 	{
 		/**
 			Initial calculations.
@@ -76,6 +83,12 @@ public:
 		chunk_base = lower_bound / 2;
 		
 		/**
+			Calculate how many chunks have to be sieved by each thread
+		*/
+		chunk_per_thread = number_of_chunks / number_of_threads;
+		plus_one_sieve = number_of_chunks - chunk_per_thread*number_of_threads;	
+		
+		/**
 			Allocate `st`.
 		*/
 		st = new word_t[size_of_st];
@@ -90,6 +103,7 @@ public:
 			chunks[i] = new word_t[chunk_size];
 			for(size_t j=0; j<chunk_size; ++j) chunks[i][j]=0;
 		}
+		
 	}
 	
 	/**
@@ -133,28 +147,69 @@ public:
 	 */
 	void soe_chunks()
 	{
-		prime_t chunk_base_temp = chunk_base;
+		std::vector<int> chunk_per_threads(number_of_threads);
+		std::vector<prime_t> offsets(number_of_threads);
+		std::vector<int> indices(number_of_threads); 
+		std::vector<int> first_chunk_to_sieve(number_of_threads);
 	
-		for(size_t j=0; j<number_of_chunks; ++j)
+		for(size_t j=0; j<number_of_threads; ++j)
 		{
-			for(size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
+			chunk_per_threads[j] = j<plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
+			if(j == 0) 
 			{
-				if(! GET(st,i)) // if it's a prime, then we sieve
+				offsets[j] = chunk_base;
+				first_chunk_to_sieve[j] = 0;
+			}
+			else 
+			{
+				offsets[j] = chunk_base + j*chunk_bits*chunk_per_threads[j-1];
+				first_chunk_to_sieve[j] = first_chunk_to_sieve[j-1] + chunk_per_threads[j-1];
+			}
+			indices[j] = j;
+			
+			std::cout << first_chunk_to_sieve[j] << "   \n";
+		}
+	
+		for(size_t j=0; j<number_of_threads; ++j)
+		{
+			int chunk_per_thread_temp = j < plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
+			threads.push_back( std::thread(&(Siever::soe_per_thread), this, \
+										   &(offsets[j]), &(chunk_per_threads[j]), &(indices[j]), \
+										   &(first_chunk_to_sieve[j])) );			
+		}
+		
+		for(size_t j=0; j<number_of_threads; ++j)
+		{
+			threads[j].join();
+		}
+	}
+	
+	static void soe_per_thread(Siever* siever, prime_t* offset, \
+							   int* number_of_chunks_to_sieve, int* index_of_thread, \
+							   int* first_chunk_to_sieve)
+	{
+		for(int j=0; j<(*number_of_chunks_to_sieve); ++j)
+		{
+			std::cout << std::endl;
+			std::cout << *index_of_thread << "  " << j << "  " << *offset << "  " << *first_chunk_to_sieve+j;
+			std::cout << std::endl;
+			for(size_t i=1; i<siever->nbits; ++i) // start from 1 if 1 is in primes
+			{
+				if(! GET(siever->st,i)) // if it's a prime, then we sieve
 				{
 					prime_t p = I2P(i); // the prime in dec
-					prime_t q = I2P(chunk_base_temp);  // the first number in the chunk
+					prime_t q = I2P(*offset);  // the first number in the chunk
 					
-					q = negmodp2I(q, p); // calculate offset
+					q = Siever::negmodp2I(q, p); // calculate offset in the actual chunk
 					
-					while(q < chunk_bits) // while we are in the chunk
+					while(q < siever->chunk_bits) // while we are in the chunk
 					{
-						SET(chunks[j], q); // mark as composite
+						SET(siever->chunks[*first_chunk_to_sieve+j], q); // mark as composite
 						q += p; // next multiplier
 					}
 				}
 			}
-			
-			chunk_base_temp += chunk_bits;
+			(*offset) += siever->chunk_bits;		
 		}
 	}
 	
@@ -169,7 +224,7 @@ private:
 	   negmodp2I() calculates the index of the candidate \f$-x \bmod p\f$,
 	   taking special care when \f$-x \bmod p\f$ is even.
 	*/
-	inline prime_t negmodp2I(prime_t x, prime_t p)
+	inline static prime_t negmodp2I(prime_t x, prime_t p)
 	{
 		prime_t q = x % p;
 		q = q ? p-q : 0;

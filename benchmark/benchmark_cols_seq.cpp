@@ -9,7 +9,7 @@
 
 #include "../source/utils/Siever.h"
 
-#define MAX_NUMBER_OF_CHUNKS 1
+#define MAX_NUMBER_OF_CHUNKS 128
 
 #define CONFIG1 "../source/utils/config1.txt"
 #define CONFIG2 "../source/utils/config2.txt"
@@ -148,7 +148,6 @@ BENCHMARK("Sieve chunks 1: ", [](benchpress::context* ctx) {
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 	siever.soe_init();
 	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
 		siever.soe_chunks();
@@ -167,7 +166,6 @@ BENCHMARK("Sieve chunks 2: ", [](benchpress::context* ctx) {
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 	siever.soe_init();
 	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
 		siever.soe_chunks();
@@ -186,7 +184,6 @@ BENCHMARK("Sieve chunks 3: ", [](benchpress::context* ctx) {
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 	siever.soe_init();
 	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
 		siever.soe_chunks();
@@ -205,7 +202,6 @@ BENCHMARK("Sieve chunks 4: ", [](benchpress::context* ctx) {
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 	siever.soe_init();
 	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
 		siever.soe_chunks();
@@ -224,7 +220,6 @@ BENCHMARK("Sieve chunks 5: ", [](benchpress::context* ctx) {
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
 	siever.soe_init();
 	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
 		siever.soe_chunks();

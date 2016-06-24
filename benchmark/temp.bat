@@ -1,3 +1,5 @@
+REM author: Peter Huszti
+
 @echo off
 
 cd ..\source\soe_seq
