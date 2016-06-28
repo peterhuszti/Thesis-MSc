@@ -165,46 +165,38 @@ public:
 				params[j].first_chunk_to_sieve = params[j-1].first_chunk_to_sieve + params[j-1].chunk_per_thread;
 			}
 			params[j].index = j;
-			
-			// std::cout << first_chunk_to_sieve[j] << "   \n";
 		}
 	
 		for(size_t j=0; j<number_of_threads; ++j)
 		{
 			int chunk_per_thread_temp = j < plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
-			threads.push_back( std::thread(&(Siever::soe_per_thread), this, &(params[j])));			
+			threads.push_back( std::thread( [this, j, &params] {
+				for(int k=0; k<(params[j].chunk_per_thread); ++k)
+				{
+					for(size_t i=1; i<this->nbits; ++i) // start from 1 if 1 is in primes
+					{
+						if(! GET(this->st,i)) // if it's a prime, then we sieve
+						{
+							prime_t p = I2P(i); // the prime in dec
+							prime_t q = I2P(params[j].offset);  // the first number in the chunk
+							
+							q = Siever::negmodp2I(q, p); // calculate offset in the actual chunk
+							
+							while(q < this->chunk_bits) // while we are in the chunk
+							{
+								SET(this->chunks[params[j].first_chunk_to_sieve+k], q); // mark as composite
+								q += p; // next multiplier
+							}
+						}
+					}
+					(params[j].offset) += this->chunk_bits;		
+				}
+			}));			
 		}
 		
 		for(size_t j=0; j<number_of_threads; ++j)
 		{
 			threads[j].join();
-		}
-	}
-	
-	static void soe_per_thread(Siever* siever, Params* params)
-	{
-		for(int j=0; j<(params->chunk_per_thread); ++j)
-		{
-			// std::cout << std::endl;
-			// std::cout << *index_of_thread << "  " << j << "  " << *offset << "  " << *first_chunk_to_sieve+j;
-			// std::cout << std::endl;
-			for(size_t i=1; i<siever->nbits; ++i) // start from 1 if 1 is in primes
-			{
-				if(! GET(siever->st,i)) // if it's a prime, then we sieve
-				{
-					prime_t p = I2P(i); // the prime in dec
-					prime_t q = I2P(params->offset);  // the first number in the chunk
-					
-					q = Siever::negmodp2I(q, p); // calculate offset in the actual chunk
-					
-					while(q < siever->chunk_bits) // while we are in the chunk
-					{
-						SET(siever->chunks[params->first_chunk_to_sieve+j], q); // mark as composite
-						q += p; // next multiplier
-					}
-				}
-			}
-			(params->offset) += siever->chunk_bits;		
 		}
 	}
 	
