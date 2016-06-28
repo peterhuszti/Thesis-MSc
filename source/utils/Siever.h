@@ -53,6 +53,8 @@ private:
 	word_t** chunks;
 	std::vector<std::thread> threads;
 	
+	struct Params {int chunk_per_thread, index, first_chunk_to_sieve; prime_t offset;};
+	
 public:	
 
 	Siever(word_t max_number_of_chunks, word_t low, word_t up, int num_thread): 
@@ -147,25 +149,22 @@ public:
 	 */
 	void soe_chunks()
 	{
-		std::vector<int> chunk_per_threads(number_of_threads);
-		std::vector<prime_t> offsets(number_of_threads);
-		std::vector<int> indices(number_of_threads); 
-		std::vector<int> first_chunk_to_sieve(number_of_threads);
-	
+		std::vector<Params> params(number_of_threads);
+
 		for(size_t j=0; j<number_of_threads; ++j)
 		{
-			chunk_per_threads[j] = j<plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
+			params[j].chunk_per_thread = j<plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
 			if(j == 0) 
 			{
-				offsets[j] = chunk_base;
-				first_chunk_to_sieve[j] = 0;
+				params[j].offset = chunk_base;
+				params[j].first_chunk_to_sieve = 0;
 			}
 			else 
 			{
-				offsets[j] = chunk_base + j*chunk_bits*chunk_per_threads[j-1];
-				first_chunk_to_sieve[j] = first_chunk_to_sieve[j-1] + chunk_per_threads[j-1];
+				params[j].offset = chunk_base + j*chunk_bits*params[j-1].chunk_per_thread;
+				params[j].first_chunk_to_sieve = params[j-1].first_chunk_to_sieve + params[j-1].chunk_per_thread;
 			}
-			indices[j] = j;
+			params[j].index = j;
 			
 			// std::cout << first_chunk_to_sieve[j] << "   \n";
 		}
@@ -173,9 +172,7 @@ public:
 		for(size_t j=0; j<number_of_threads; ++j)
 		{
 			int chunk_per_thread_temp = j < plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
-			threads.push_back( std::thread(&(Siever::soe_per_thread), this, \
-										   &(offsets[j]), &(chunk_per_threads[j]), &(indices[j]), \
-										   &(first_chunk_to_sieve[j])) );			
+			threads.push_back( std::thread(&(Siever::soe_per_thread), this, &(params[j])));			
 		}
 		
 		for(size_t j=0; j<number_of_threads; ++j)
@@ -184,11 +181,9 @@ public:
 		}
 	}
 	
-	static void soe_per_thread(Siever* siever, prime_t* offset, \
-							   int* number_of_chunks_to_sieve, int* index_of_thread, \
-							   int* first_chunk_to_sieve)
+	static void soe_per_thread(Siever* siever, Params* params)
 	{
-		for(int j=0; j<(*number_of_chunks_to_sieve); ++j)
+		for(int j=0; j<(params->chunk_per_thread); ++j)
 		{
 			// std::cout << std::endl;
 			// std::cout << *index_of_thread << "  " << j << "  " << *offset << "  " << *first_chunk_to_sieve+j;
@@ -198,18 +193,18 @@ public:
 				if(! GET(siever->st,i)) // if it's a prime, then we sieve
 				{
 					prime_t p = I2P(i); // the prime in dec
-					prime_t q = I2P(*offset);  // the first number in the chunk
+					prime_t q = I2P(params->offset);  // the first number in the chunk
 					
 					q = Siever::negmodp2I(q, p); // calculate offset in the actual chunk
 					
 					while(q < siever->chunk_bits) // while we are in the chunk
 					{
-						SET(siever->chunks[*first_chunk_to_sieve+j], q); // mark as composite
+						SET(siever->chunks[params->first_chunk_to_sieve+j], q); // mark as composite
 						q += p; // next multiplier
 					}
 				}
 			}
-			(*offset) += siever->chunk_bits;		
+			(params->offset) += siever->chunk_bits;		
 		}
 	}
 	
