@@ -38,12 +38,11 @@ std::pair<word_t,word_t> read_config(std::string config)
 }
 
 BENCHMARK("Read config file: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+	
 		auto bounds = read_config(CONFIG1);
 		
 		lower_bound = bounds.first;
@@ -52,181 +51,171 @@ BENCHMARK("Read config file: ", [](benchpress::context* ctx) {
 })
 
 BENCHMARK("Initialize sieving 1: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG1);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
-		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG1);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
 		siever.soe_init();
 	}
 })
 
 BENCHMARK("Initialize sieving 2: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG2);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
-		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG2);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+	
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
 		siever.soe_init();
 	}
 })
-
+/*
 BENCHMARK("Initialize sieving 3: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG3);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
-		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG3);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
 		siever.soe_init();
 	}
-})
+})*/
 
 BENCHMARK("Initialize sieving 4: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG4);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
-		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG4);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+	
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
 		siever.soe_init();
 	}
 })
 
 BENCHMARK("Initialize sieving 5: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG5);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
-		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG5);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+	
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
 		siever.soe_init();
 	}
 })
 
 BENCHMARK("Sieve chunks 1: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG1);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
-	siever.soe_init();
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG1);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+		
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
+		siever.soe_init();
+		
 		siever.soe_chunks();
 	}
 })
 
 BENCHMARK("Sieve chunks 2: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG2);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
-	siever.soe_init();
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG2);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+		
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
+		siever.soe_init();
+	
 		siever.soe_chunks();
 	}
 })
-
+/*
 BENCHMARK("Sieve chunks 3: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG3);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
-	siever.soe_init();
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG3);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+		
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
+		siever.soe_init();
+	
 		siever.soe_chunks();
 	}
-})
+})*/
 
 BENCHMARK("Sieve chunks 4: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG4);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
-	siever.soe_init();
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG4);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+		
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
+		siever.soe_init();
+	
 		siever.soe_chunks();
 	}
 })
 
 BENCHMARK("Sieve chunks 5: ", [](benchpress::context* ctx) {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-	
-	auto bounds = read_config(CONFIG5);
-		
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound);
-	siever.soe_init();
-	
-	ctx->reset_timer();
 	for (size_t i = 0; i < ctx->num_iterations(); ++i)
 	{
+		word_t lower_bound = 0; // both should be a power of 2
+		word_t upper_bound = 0;
+		
+		auto bounds = read_config(CONFIG5);
+			
+		lower_bound = bounds.first;
+		upper_bound = bounds.second;
+		
+		Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, 1);
+		siever.soe_init();
+	
 		siever.soe_chunks();
 	}
 })

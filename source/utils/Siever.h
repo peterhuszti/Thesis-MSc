@@ -53,7 +53,7 @@ private:
 	word_t** chunks;
 	std::vector<std::thread> threads;
 	
-	struct Params {int chunk_per_thread, index, first_chunk_to_sieve; prime_t offset;};
+	struct Params_for_threads {int chunk_per_thread, index, first_chunk_to_sieve; prime_t offset;};
 	
 public:	
 
@@ -149,7 +149,7 @@ public:
 	 */
 	void soe_chunks()
 	{
-		std::vector<Params> params(number_of_threads);
+		std::vector<Params_for_threads> params(number_of_threads);
 
 		for(size_t j=0; j<number_of_threads; ++j)
 		{
@@ -169,7 +169,6 @@ public:
 	
 		for(size_t j=0; j<number_of_threads; ++j)
 		{
-			int chunk_per_thread_temp = j < plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
 			threads.push_back( std::thread( [this, j, &params] {
 				for(int k=0; k<(params[j].chunk_per_thread); ++k)
 				{

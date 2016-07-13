@@ -1,0 +1,79 @@
+Read config file:                          2000      506550 ns/op
+Initialize sieving 1:                      2000      504550 ns/op
+Initialize sieving 2:                      2000      647064 ns/op
+Initialize sieving 4:                       200     5005500 ns/op
+Initialize sieving 5:                       100    17181718 ns/op
+
+Sieve chunks 1:                            2000      852585 ns/op
+Sieve chunks 2:                            2000      970097 ns/op
+Sieve chunks 4:                               5   826682660 ns/op
+Sieve chunks 5:                               1  4109410900 ns/op
+
+Sieve chunks 1:                            2000      868586 ns/op
+Sieve chunks 2:                            1000     1334133 ns/op
+Sieve chunks 4:                               5   290429040 ns/op
+Sieve chunks 5:                               1  1240124000 ns/op
+
+Sieve chunks 1 (2 threads):                2000      924092 ns/op
+Sieve chunks 1 (4 threads):                1000     1090109 ns/op
+Sieve chunks 1 (8 threads):                1000     1351135 ns/op
+Sieve chunks 1 (16 threads):               1000     1831183 ns/op
+Sieve chunks 1 (32 threads):                500     2794279 ns/op
+Sieve chunks 2 (2 threads):                1000     1175117 ns/op
+Sieve chunks 2 (4 threads):                1000     1319131 ns/op
+Sieve chunks 2 (8 threads):                1000     1482148 ns/op
+Sieve chunks 2 (16 threads):               1000     1905190 ns/op
+Sieve chunks 2 (32 threads):                500     2798279 ns/op
+Sieve chunks 4 (2 threads):                  10   178417840 ns/op
+Sieve chunks 4 (4 threads):                  10   146414640 ns/op
+Sieve chunks 4 (8 threads):                  10   150815080 ns/op
+Sieve chunks 4 (16 threads):                 10   148614860 ns/op
+Sieve chunks 4 (32 threads):                 10   151315130 ns/op
+Sieve chunks 5 (2 threads):                   5   767676760 ns/op
+Sieve chunks 5 (4 threads):                   5   693869380 ns/op
+Sieve chunks 5 (8 threads):                   5   666466640 ns/op
+Sieve chunks 5 (16 threads):                  5   663266320 ns/op
+Sieve chunks 5 (32 threads):                  5   671467140 ns/op
+
+Sieve chunks 1: 852585
+				868586
+				868586
+				1090109
+				1351135
+				1831183
+				2794279
+								
+Sieve chunks 2: 970097
+				1334133
+				1175117
+				1319131							
+				1482148
+				1905190
+				2798279
+
+Sieve chunks 4: 826682660
+				290429040	
+				178417840
+				146414640
+				150815080
+				148614860
+				151315130
+
+Sieve chunks 5: 4109410900
+				1240124000
+				767676760
+				693869380
+				666466640
+				663266320
+				671467140
+
+
+
+
+
+
+
+
+
+
+
