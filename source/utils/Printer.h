@@ -46,10 +46,10 @@ public:
 		
 		prime_t chunk_base_temp = siever->chunk_base;
 		
-		for(size_t j=0; j<siever->number_of_chunks; ++j)
+		for (size_t j=0; j<siever->number_of_chunks; ++j)
 		{
-			for(size_t i=0; i<siever->chunk_bits; ++i)
-				if(! GET( siever->chunks[j], i )) 
+			for (size_t i=0; i<siever->chunk_bits; ++i)
+				if (!GET( siever->chunks[j], i )) 
 				{
 					std::cout << I2P(i + chunk_base_temp) << ", ";
 				}
@@ -65,8 +65,8 @@ public:
 	{
 		std::cout << "The sieving table:\n";
 		
-		for(size_t i=0; i<siever->nbits; i++) 
-			if(! GET(siever->st,i)) std::cout << I2P(i) << ", ";
+		for (size_t i=0; i<siever->nbits; i++) 
+			if (! GET(siever->st,i)) std::cout << I2P(i) << ", ";
 		std::cout << "\n\n";
 	}
 	
@@ -77,10 +77,10 @@ public:
 		int number_of_found_primes = 0;
 		prime_t chunk_base_temp = siever->chunk_base;
 		
-		for(size_t j=0; j<siever->number_of_chunks; ++j)
+		for (size_t j=0; j<siever->number_of_chunks; ++j)
 		{
-			for(size_t i=0; i<siever->chunk_bits; ++i)
-				if(! GET( siever->chunks[j], i )) 
+			for (size_t i=0; i<siever->chunk_bits; ++i)
+				if (! GET( siever->chunks[j], i )) 
 				{
 					number_of_found_primes++;
 				}
