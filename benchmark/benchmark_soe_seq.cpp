@@ -16,6 +16,7 @@
 #define CONFIG3 "../source/utils/config3.txt"
 #define CONFIG4 "../source/utils/config4.txt"
 #define CONFIG5 "../source/utils/config5.txt"
+#define CONFIG6 "../source/utils/config6.txt"
 
 std::pair<word_t,word_t> read_config(std::string config)
 {

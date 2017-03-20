@@ -22,7 +22,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG false // true if we want to print debug info
+#define DEBUG true // true if we want to print debug info
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
@@ -67,10 +67,10 @@ public:
 		*/
 		last_number = sqrt(upper_bound);
 		log_upper_bound = log2(last_number + 1);
-		
+	
 		size_of_st = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 		nbits = last_number / 2 + 1;
-		
+	
 		word_t chunk_temp = upper_bound - lower_bound;
 		number_of_chunks = max_number_of_chunks == 1 ? 1 : (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
 		while (number_of_chunks > max_number_of_chunks)
@@ -89,23 +89,21 @@ public:
 		*/
 		chunk_per_thread = number_of_chunks / number_of_threads;
 		plus_one_sieve = number_of_chunks - chunk_per_thread*number_of_threads;	
-		
+	
 		/**
 			Allocate `st`.
 		*/
 		st = new word_t[size_of_st];
 		for (size_t j=0; j<size_of_st; ++j) st[j]=0;
-		
 		/**
 			Initialization of chunks 
-		*/	
+		*/
 		chunks = new word_t*[number_of_chunks];
 		for (size_t i=0; i<number_of_chunks; ++i)
 		{
 			chunks[i] = new word_t[chunk_size];
 			for (size_t j=0; j<chunk_size; ++j) chunks[i][j]=0;
 		}
-		
 	}
 	
 	/**
