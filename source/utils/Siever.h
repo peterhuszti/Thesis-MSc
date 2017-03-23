@@ -22,7 +22,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG true // true if we want to print debug info
+#define DEBUG false // true if we want to print debug info
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;

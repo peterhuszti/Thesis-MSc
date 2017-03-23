@@ -6,7 +6,7 @@ cd ..\source\soe_seq
 g++ -std=c++11 -o soe_seq -O3 main.cpp
 
 set "soeSeqStartTime=%time%"
-soe_seq.exe
+soe_seq.exe config5.txt
 set "soeSeqStopTime=%time%"
 call :timeToMS time1 "%soeSeqStartTime"
 call :timeToMS time2 "%soeSeqStopTime"
@@ -16,7 +16,7 @@ cd ..\cols_seq
 g++ -std=c++11 -o cols_seq -O3 main.cpp
 
 set "colsSeqStartTime=%time%"
-cols_seq.exe
+cols_seq.exe config5.txt
 set "colsSeqStopTime=%time%"
 call :timeToMS time1 "%colsSeqStartTime"
 call :timeToMS time2 "%colsSeqStopTime"
@@ -26,7 +26,7 @@ cd ..\soe_par
 g++ -std=c++11 -o soe_par -O3 main.cpp
 
 set "soeParStartTime=%time%"
-soe_par.exe
+soe_par.exe config5.txt
 set "soeParStopTime=%time%"
 call :timeToMS time1 "%soeParStartTime"
 call :timeToMS time2 "%soeParStopTime"
@@ -36,7 +36,7 @@ cd ..\cols_par
 g++ -std=c++11 -o cols_par -O3 main.cpp
 
 set "colsParStartTime=%time%"
-cols_par.exe
+cols_par.exe config5.txt
 set "colsParStopTime=%time%"
 call :timeToMS time1 "%colsParStartTime"
 call :timeToMS time2 "%colsParStopTime"
