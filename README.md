@@ -2,7 +2,7 @@
 
 ## Parallel implementation of cache optimized linear sieve
 
-Run:
+Compile:
 	g++ -O3 -std=c++11 main.cpp
 
 Author: Peter Huszti

@@ -19,11 +19,10 @@
 #include "../utils/utils.h"
 
 #define MAX_NUMBER_OF_CHUNKS 1
-#define NUMBER_OF_THREADS 1 // should be < number chunks
 
 int main(int argc, char *argv[])
 {
-	start(argc, argv, MAX_NUMBER_OF_CHUNKS, NUMBER_OF_THREADS);
+	start(argc, argv, MAX_NUMBER_OF_CHUNKS);
 		
 	return 0;
 }

@@ -28,26 +28,34 @@ std::pair<word_t,word_t> read_config(std::string config)
 	return std::pair<word_t,word_t>(lower_bound, upper_bound);
 }
 
-void start(int argc, char *argv[], int MAX_NUMBER_OF_CHUNKS, int NUMBER_OF_THREADS)
+void start(int argc, char *argv[], int MAX_NUMBER_OF_CHUNKS)
 {
 	word_t lower_bound = 0; // both should be a power of 2
 	word_t upper_bound = 0;
+	int number_of_threads = 0;
 	
 	std::string config = "../utils/";
 	if (argc == 1)
 	{
 		config += "config1.txt";
+		number_of_threads = 1;
+	}
+	else if (argc == 2)
+	{
+		config += "config1.txt";
+		number_of_threads = atoi(argv[1]);
 	}
 	else
 	{
-		config += argv[1];
+		config += argv[2];
+		number_of_threads = atoi(argv[1]);
 	}
 	auto bounds = read_config(config);
 		
 	lower_bound = bounds.first;
 	upper_bound = bounds.second;
 	
-	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, NUMBER_OF_THREADS);
+	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, number_of_threads);
 	
 	#if DEBUG
 		Printer printer(&siever);
@@ -58,9 +66,12 @@ void start(int argc, char *argv[], int MAX_NUMBER_OF_CHUNKS, int NUMBER_OF_THREA
 	siever.soe_init();
 	siever.soe_chunks();
 	
-	#if DEBUG
+	#if PRIMES
 		printer.print_sieving_table();
 		printer.print_primes_found();
+	#endif
+	
+	#if DEBUG
 		printer.print_number_of_found_primes();
 	#endif
 }
