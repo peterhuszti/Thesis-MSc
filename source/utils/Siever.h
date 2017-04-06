@@ -23,7 +23,7 @@
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
 #define DEBUG true // true if we want to print debug info
-#define PRIMES false // true if we want to show the found primes
+#define PRIMES true // true if we want to show the found primes
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;

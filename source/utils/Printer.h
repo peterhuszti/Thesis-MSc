@@ -3,6 +3,8 @@
 	source: https://github.com/vatai/simple_soe/blob/master/simple_soe.c
  */
  
+#include <fstream>
+ 
 #ifndef PRINTER
 #define PRINTER
 
@@ -12,10 +14,20 @@ class Printer
 private:
 
 	Siever* siever;
+	
+	std::ofstream out;
 
 public:
 
-	Printer(Siever* s): siever(s) {}
+	Printer(Siever* s): siever(s) 
+	{
+		out.open("result.txt", std::ofstream::out);
+	}
+	
+	~Printer()
+	{
+		out.close();
+	}
 
 	void print_debug_info()
 	{
@@ -42,7 +54,7 @@ public:
 	
 	void print_primes_found()
 	{
-		std::cout << "The found primes in the given interval:\n";
+		out << "The found primes in the given interval:\n";
 		
 		prime_t chunk_base_temp = siever->chunk_base;
 		
@@ -51,23 +63,23 @@ public:
 			for (size_t i=0; i<siever->chunk_bits; ++i)
 				if (!GET( siever->chunks[j], i )) 
 				{
-					std::cout << I2P(i + chunk_base_temp) << ", ";
+					out << I2P(i + chunk_base_temp) << ", ";
 				}
-			std::cout << std::endl;
+			out << std::endl;
 			
 			chunk_base_temp += siever->chunk_bits;
 		}
 		
-		std::cout << std::endl;
+		out << std::endl;
 	}
 	
 	void print_sieving_table()
 	{
-		std::cout << "The sieving table:\n";
+		out << "The sieving table:\n";
 		
 		for (size_t i=0; i<siever->nbits; i++) 
-			if (! GET(siever->st,i)) std::cout << I2P(i) << ", ";
-		std::cout << "\n\n";
+			if (! GET(siever->st,i)) out << I2P(i) << ", ";
+		out << "\n\n";
 	}
 	
 	void print_number_of_found_primes()
