@@ -22,7 +22,7 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG true // true if we want to print debug info
+#define DEBUG false // true if we want to print debug info
 #define PRIMES true // true if we want to show the found primes
  
 typedef uint64_t prime_t;
@@ -95,12 +95,12 @@ public:
 			Allocate `st`.
 		*/
 		st = new word_t[size_of_st];
-		for (size_t j=0; j<size_of_st; ++j) st[j]=0;
+		for (size_t j=0; j<=size_of_st; ++j) st[j]=0;
 		/**
 			Initialization of chunks 
 		*/
 		chunks = new word_t*[number_of_chunks];
-		for (size_t i=0; i<number_of_chunks; ++i)
+		for (size_t i=0; i<=number_of_chunks; ++i)
 		{
 			chunks[i] = new word_t[chunk_size];
 			for (size_t j=0; j<chunk_size; ++j) chunks[i][j]=0;
@@ -135,6 +135,7 @@ public:
 			while (i < nbits) // sieve until it is in st
 			{
 				SET(st,i); // mark as composite
+				if(I2P(i) == 263) {std::cout << "ASD" << I2P(i) << " ";}
 				i += p; // step forward p
 			}
 			q++; // step forward 1, so the 2. while can find the next prime to sieve with
@@ -176,9 +177,9 @@ public:
 						{
 							prime_t p = I2P(i); // the prime in dec
 							prime_t q = I2P(params[j].offset);  // the first number in the chunk
-							
+
 							q = Siever::negmodp2I(q, p); // calculate offset in the actual chunk
-							
+
 							while (q < this->chunk_bits) // while we are in the chunk
 							{
 								SET(this->chunks[params[j].first_chunk_to_sieve+k], q); // mark as composite

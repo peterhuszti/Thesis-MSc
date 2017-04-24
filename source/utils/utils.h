@@ -57,9 +57,8 @@ void start(int argc, char *argv[], int MAX_NUMBER_OF_CHUNKS)
 	
 	Siever siever(MAX_NUMBER_OF_CHUNKS, lower_bound, upper_bound, number_of_threads);
 	
-	#if DEBUG
-		Printer printer(&siever);
-	
+	Printer printer(&siever);
+	#if DEBUG	
 		printer.print_debug_info();
 	#endif
 	

@@ -4,6 +4,7 @@
  */
  
 #include <fstream>
+#include <vector>
  
 #ifndef PRINTER
 #define PRINTER
@@ -50,6 +51,25 @@ public:
 		std::cout << "number of threads " << siever->number_of_threads << std::endl;
 		std::cout << "chunk per thread " << siever->chunk_per_thread << std::endl;
 		std::cout << "plus one sieve " << siever->plus_one_sieve << std::endl;
+	}
+	
+	std::vector<int> get_primes_found()
+	{
+		std::vector<int> primes;
+		
+		prime_t chunk_base_temp = siever->chunk_base;
+		
+		for (size_t j=0; j<siever->number_of_chunks; ++j)
+		{
+			for (size_t i=0; i<siever->chunk_bits; ++i)
+				if (!GET( siever->chunks[j], i )) 
+				{
+					primes.push_back(I2P(i + chunk_base_temp));
+				}			
+			chunk_base_temp += siever->chunk_bits;
+		}
+		
+		return primes;
 	}
 	
 	void print_primes_found()

@@ -18,7 +18,7 @@
 #include "../utils/Printer.h"
 #include "../utils/utils.h"
 
-#define MAX_NUMBER_OF_CHUNKS 256
+#define MAX_NUMBER_OF_CHUNKS 128
 
 int main(int argc, char *argv[])
 {
