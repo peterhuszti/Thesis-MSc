@@ -1,3 +1,6 @@
 TODO
 
-	Celero?
+	computers
+	-O3
+	threads
+	max number of chunks

@@ -101,7 +101,7 @@ public:
 			if (! GET(siever->st,i)) out << I2P(i) << ", ";
 		out << "\n\n";
 	}
-	
+
 	void print_number_of_found_primes()
 	{
 		std::cout << "The number of found primes: ";

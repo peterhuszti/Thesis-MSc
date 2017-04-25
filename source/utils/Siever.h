@@ -27,6 +27,7 @@
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
+typedef uint16_t offset_t; // TODO: check the max size of this
 
 class Siever
 {
@@ -51,10 +52,11 @@ private:
 	int plus_one_sieve; // how many thread have to sieve one more chunk than the others (< number_of_threads)
 	
 	word_t* st; // sieving table
+	offset_t** ot; // offset table
 	word_t** chunks;
 	std::vector<std::thread> threads;
 	
-	struct Params_for_threads {int chunk_per_thread, first_chunk_to_sieve; prime_t offset;};
+	struct Params_for_threads {int chunk_per_thread, first_chunk_to_sieve; prime_t starting_point;};
 	
 public:	
 
@@ -103,7 +105,17 @@ public:
 		for (size_t i=0; i<=number_of_chunks; ++i)
 		{
 			chunks[i] = new word_t[chunk_size];
-			for (size_t j=0; j<chunk_size; ++j) chunks[i][j]=0;
+			for (size_t j=0; j<=chunk_size; ++j) chunks[i][j]=0;
+		}
+		
+		/**
+			Allocate offsets
+			Every thread needs its own offset table, because they will sieve different chunks.
+		*/
+		ot = new offset_t*[number_of_threads];
+		for (size_t i=0; i<number_of_threads; ++i)
+		{
+			ot[i] = new offset_t[nbits];
 		}
 	}
 	
@@ -114,11 +126,13 @@ public:
 	{
 		for (size_t i=0; i<number_of_chunks; i++) delete[] chunks[i];
 		delete[] chunks;
+		for (size_t i=0; i<number_of_threads; i++) delete[] ot[i];
+		delete[] ot;
 		delete[] st;
 	}
 
 	/**
-	   Implements the sieving of "small" primes.  
+	   Implements the sieving of "small" primes.
 	*/
 	void soe_init()
 	{
@@ -140,6 +154,35 @@ public:
 			}
 			q++; // step forward 1, so the 2. while can find the next prime to sieve with
 		}
+	} 
+	
+	/**
+		Initializes the offset table for each thread.
+	*/
+	void init_offsets(const std::vector<Params_for_threads> &params)
+	{
+		for (size_t j=0; j<number_of_threads; ++j) // for all threads
+		{
+			for(size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
+			{	
+				if (!GET( st, i )) // if it's a prime, then we calculate offset
+				{
+					prime_t p = I2P(i); // the prime in dec
+					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
+
+					ot[j][i] = negmodp2I(q, p); // calculate offset in the actual chunk
+				}
+			}
+		}
+	}
+	
+	/**
+		Updates the offset table for the next chunk.
+		TODO: circles and buckets
+	*/
+	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
+	{
+		ot[thread_id][prime_index] = last_offset - nbits;
 	}
 	
 	/**
@@ -148,7 +191,7 @@ public:
 	   bits from `base` to `base+chunk_bits-1` bits.
 	 */
 	void soe_chunks()
-	{
+	{	
 		std::vector<Params_for_threads> params(number_of_threads);
 
 		for (size_t j=0; j<number_of_threads; ++j)
@@ -156,38 +199,48 @@ public:
 			params[j].chunk_per_thread = j<plus_one_sieve ? chunk_per_thread+1 : chunk_per_thread;
 			if (j == 0) 
 			{
-				params[j].offset = chunk_base;
+				params[j].starting_point = chunk_base;
 				params[j].first_chunk_to_sieve = 0;
 			}
 			else 
 			{
-				params[j].offset = chunk_base + j*chunk_bits*params[j-1].chunk_per_thread;
+				params[j].starting_point = chunk_base + j*chunk_bits*params[j-1].chunk_per_thread;
 				params[j].first_chunk_to_sieve = params[j-1].first_chunk_to_sieve + params[j-1].chunk_per_thread;
 			}
 		}
+		
+		init_offsets(params);
 	
 		for (size_t j=0; j<number_of_threads; ++j)
 		{
 			threads.push_back( std::thread( [this, j, &params] {
-				for (int k=0; k<(params[j].chunk_per_thread); ++k) // iterate through the chunks
+				for (size_t k=0; k<params[j].chunk_per_thread; ++k) // iterate through the chunks
 				{
+					bool last_chunk = (k == params[j].chunk_per_thread - 1);
 					for(size_t i=1; i<this->nbits; ++i) // start from 1 if 1 is in primes
 					{
 						if (!GET( this->st, i )) // if it's a prime, then we sieve
 						{
 							prime_t p = I2P(i); // the prime in dec
-							prime_t q = I2P(params[j].offset);  // the first number in the chunk
+							prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
 
-							q = Siever::negmodp2I(q, p); // calculate offset in the actual chunk
+							q = this->ot[j][i];
 
 							while (q < this->chunk_bits) // while we are in the chunk
 							{
 								SET(this->chunks[params[j].first_chunk_to_sieve+k], q); // mark as composite
 								q += p; // next multiplier
 							}
+							if (!last_chunk) // if we are at the last chunk than we can spare the calculation of offsets
+							{
+								update_offset(j, i, q);
+							}
 						}
 					}
-					(params[j].offset) += this->chunk_bits;		
+					if (!last_chunk)
+					{
+						params[j].starting_point += this->chunk_bits;
+					}
 				}
 			}));			
 		}
