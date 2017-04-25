@@ -19,22 +19,48 @@ struct res
 };
 
 res start(std::string, int, int);
-void compare(std::vector<int>, res);
+std::vector<int> read_real_results();
+void compare(const std::vector<int>&, const res&);
 
 int main(int argc, char *argv[])
 {
 	res my_results;
-	std::vector<int> real_results;
-	
+	const std::vector<int> real_results = read_real_results();	
+
 	std::cout << "Running SOE_SEQ.....\n";
 
 	std::cout << "    config1.txt\n";
-	
 	my_results = start("../source/utils/config1.txt", 1, 1);
 	compare(real_results, my_results);
-	
 	std::cout << "    config2.txt\n";
 	my_results = start("../source/utils/config2.txt", 1, 1);
+	compare(real_results, my_results);
+
+	std::cout << "\n\nRunning SOE_PAR.....\n";
+
+	std::cout << "    config1.txt\n";
+	my_results = start("../source/utils/config1.txt", 8, 1);
+	compare(real_results, my_results);
+	std::cout << "    config2.txt\n";
+	my_results = start("../source/utils/config2.txt", 8, 1);
+	compare(real_results, my_results);
+
+	std::cout << "\n\nRunning COLS_SEQ.....\n";
+
+	std::cout << "    config1.txt\n";
+	my_results = start("../source/utils/config1.txt", 1, 128);
+	compare(real_results, my_results);
+	std::cout << "    config2.txt\n";
+	my_results = start("../source/utils/config2.txt", 1, 128);
+	compare(real_results, my_results);
+	
+	std::cout << "\n\nRunning COLS_PAR.....\n";
+
+	std::cout << "    config1.txt\n";
+	my_results = start("../source/utils/config1.txt", 8, 128);
+	compare(real_results, my_results);
+	std::cout << "    config2.txt\n";
+	my_results = start("../source/utils/config2.txt", 8, 128);
 	compare(real_results, my_results);
 	
 	return 0;
@@ -61,9 +87,9 @@ res start(std::string config, int number_of_threads, int number_of_chunks)
 	return res(printer.get_primes_found(), lower_bound, upper_bound);
 }
 
-void compare(std::vector<int> real, res mine)
+std::vector<int> read_real_results()
 {
-	bool equal = true;
+	std::vector<int> real;
 	std::ifstream reader;
 	reader.open("primes.txt");	
 	
@@ -71,19 +97,25 @@ void compare(std::vector<int> real, res mine)
 	{
 		int temp;
 		reader >> temp;
-		if (mine.low <= temp && temp <= mine.up)
-		{
-			real.push_back(temp);
-		}
+		real.push_back(temp);
 	}
 	reader.close();
 	
+	return real;
+}
+
+void compare(const std::vector<int> &real, const res &mine)
+{
+	bool equal = true;	
 	
-	for (int i=0; i<real.size() && equal; ++i)
+	int j;
+	for (j=0; real[j]<mine.low; ++j);
+//	std::cout << "*** " << real[j] << " " << mine.primes[0] << std::endl;
+	for (int i=0; i<mine.primes.size() && equal; ++i, ++j)
 	{
-		if (real[i] != mine.primes[i])
+		if (real[j] != mine.primes[i])
 		{
-			std::cout << real[i] << "  " << mine.primes[i] << std::endl;
+			std::cout << "REAL:    " << real[j] << "\nFOUND: " << mine.primes[i] << std::endl;
 			equal = false;
 		}
 	}

@@ -182,7 +182,7 @@ public:
 	*/
 	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
 	{
-		ot[thread_id][prime_index] = last_offset - nbits;
+		ot[thread_id][prime_index] = last_offset - chunk_bits;
 	}
 	
 	/**
