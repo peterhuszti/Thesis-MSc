@@ -1,0 +1,38 @@
+Bevezetés	3-4 oldal
+	Motiváció
+	A program célja
+	
+Matematikai háttér	6-8 oldal
+	Prím számok, faktorizáció
+	Eraotsztenészi-szita
+		Hátrányok
+	COLS
+		Előnyök
+	
+Felhasználói dokumentáció 6-8 oldal
+	A program funkciói
+	A program használata
+	A program bemenete
+	A program kimenete
+	CD tartalma, telepítés
+	
+Fejlesztői dokumentáció 10-12 oldal
+	A program felépítése
+	Adatszerkezetek
+		Szitatábla
+		Szegmensek
+		Körök és edények
+	Párhuzamos megvalósítás
+	Skálázhatóság
+	Tesztelés
+	Rendszerkövetelmények
+	Továbbfejlesztési lehetőségek
+
+Az algoritmusok összehasonlítása 4-6 oldal
+	Használt hardverek
+	Az eredmények
+	Konklúzió
+	
+Összegzés 1-2 oldal
+	
+Felhasznált irodalom

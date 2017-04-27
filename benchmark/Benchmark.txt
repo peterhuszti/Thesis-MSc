@@ -4,3 +4,6 @@ TODO
 	-O3
 	threads
 	max number of chunks
+	
+	g++ -O3 -Ofast -march=native -frename-registers -funroll-loops -fopenmp -D_GLIBCXX_PARALLEL -fprofile-generate -std=c++11 main.cpp
+																								-fprofile-use -fprofile-correction

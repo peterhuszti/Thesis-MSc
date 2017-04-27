@@ -148,42 +148,13 @@ public:
 
 			while (i < nbits) // sieve until it is in st
 			{
+				
 				SET(st,i); // mark as composite
-				if(I2P(i) == 263) {std::cout << "ASD" << I2P(i) << " ";}
 				i += p; // step forward p
 			}
 			q++; // step forward 1, so the 2. while can find the next prime to sieve with
 		}
 	} 
-	
-	/**
-		Initializes the offset table for each thread.
-	*/
-	void init_offsets(const std::vector<Params_for_threads> &params)
-	{
-		for (size_t j=0; j<number_of_threads; ++j) // for all threads
-		{
-			for(size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
-			{	
-				if (!GET( st, i )) // if it's a prime, then we calculate offset
-				{
-					prime_t p = I2P(i); // the prime in dec
-					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
-
-					ot[j][i] = negmodp2I(q, p); // calculate offset in the actual chunk
-				}
-			}
-		}
-	}
-	
-	/**
-		Updates the offset table for the next chunk.
-		TODO: circles and buckets
-	*/
-	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
-	{
-		ot[thread_id][prime_index] = last_offset - chunk_bits;
-	}
 	
 	/**
 	   Performs SOE on the chunks with primes read from the sieve table `st`
@@ -258,6 +229,35 @@ public:
 	
 private:
 
+	/**
+		Initializes the offset table for each thread.
+	*/
+	void init_offsets(const std::vector<Params_for_threads> &params)
+	{
+		for (size_t j=0; j<number_of_threads; ++j) // for all threads
+		{
+			for(size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
+			{	
+				if (!GET( st, i )) // if it's a prime, then we calculate offset
+				{
+					prime_t p = I2P(i); // the prime in dec
+					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
+
+					ot[j][i] = negmodp2I(q, p); // calculate offset in the actual chunk
+				}
+			}
+		}
+	}
+	
+	/**
+		Updates the offset table for the next chunk.
+		TODO: circles and buckets
+	*/
+	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
+	{
+		ot[thread_id][prime_index] = last_offset - chunk_bits;
+	}
+	
 	/**
 	   negmodp2I() calculates the index of the candidate \f$-x \bmod p\f$,
 	   taking special care when \f$-x \bmod p\f$ is even.
