@@ -1,38 +1,82 @@
-Bevezetés	3-4 oldal
-	Motiváció
-	A program célja
+Bevezetés
+	A dolgozat célja, motiváció
+		Az alkalmazott matematikában nagyon fontos szerepet játszanak az prím számok, elég csak például a nyílt kulcsos titkosítási módszerekre gondolnunk. Ebből kifolyólag az évek során nagyon sok módszert fejlesztettek ki prímsázmok keresésére, például a Fermat-teszt, vagy a Miller-Rabin teszt. Ezen módszerekkel elég gyorsan el lehet dönteni egy darab számról, hogy prím-e vagy sem, és így ezért az ilyen algoritmusokkal nagyon nagy prímeket is meg lehet találni viszonylag gyorsan.
+		Előfordulhat azonban probléma, hogy egy adott intervallumban szeretnénk megtalálni az ott lévő összes prím számot. Az ilyen feladatok megoldására a leghatékonyabb módszerek a szitáló módszerek. Ezek úgy működnek, hogy kiválasztunk bizonyos számokat, és azokkal "végigszitálunk" a vizsgált intervallumon, és az érintetlenül hagyott számok lesznek a nekünk megfelelő, jelen esetben prím számok. Ezek közül is a legegyszerűbb egészen az ókorig nyúlik vissza, az ún. Erathosztenészi-szita. Ez az algoritmus ahhoz képest, hogy milyen rég óta ismert, meglepően hatékonyan működik. De természetesen vannak hátrányai, például hiába tűnik nagyon gyorsnak komplexitás szempontjából, elég nagy intervallumokra nagyon meg fog növekedni a memória olvasások száma, ami mint köztudott nagyságrendekkel lassabb, mint a processzorok utasítás végrehajtó képessége már a memóriában lévő adatokon. Nem meglepő módon sok féle képpen fel lehet javítani az algoritmus teljesítményét mai modern eszközökkel.
+		A dolgozat célja az, hogy a fent említett "naív" szitáló algoritmus teljesítményét növeljük, miközben a program skálázható is maradjon, és így a valós gyakorlati életben is alkalmazni lehessen. A dolgozat során két féle módon próbáltam meg javítani a teljesítményen.
+		Az első és talán legkézenfekvőbb módszer a program párhuzamosítása. Ezt viszonylag egyszerűen meg lehet tenni, mivel az algoritmust könnyedén fel lehet darabolni kisebb, egymással ekvivalens részfeladatokra, amiket szét lehet osztani a processzor szálai közt. Ráadásul a konkurens programokra jellenző veszélyek nem állnak fent, így sok nehézségtől meg tudjuk kímélni magunkat, ami a teljesítményt is javítja. 
+		A másik megközelítés, hogy a memóriaműveletek számát próbáljuk meg minimalizálni. Erre egy hatékony megvalósítása az ún. COLS - cache optimalizált lineáris szita - algoritmus, aminek az megvalósítása is része a dolgozatnak.
+		Végül a fentiekből magától értetődik egy újabb gyorsítási lehetőség, hogy a COLS algoritmust is meg lehet valósítani párhuzamos szálakon, ami mint majd később látjuk megint csak nagy teljesítménynövekedéssel járhat.
+		A dolgozat során implementáltam a fent említett négy algoritmust, és azt vizsgáltam, hogy milyen esetekben (a probléma mérete, hardver specifikációja) mennyire tudják, ha egyáltalán lehetséges, felgyorsítani a fenit módszerek a probléma megoldását. Az algoritmusokat C++ nyelvben valósítottam meg, csak és kizárólag a standard C++11 szabvány által kínált lehetőségeket felhasználva.
+		Az elészített programmal könnyen és gyorsan lehet egy megadott intervallumon megkeresni a prím számokat, továbbá megfelelően paraméterezhető a rendelkezésre álló processzor(ok) tulajdonságainak ismeretében. A program jól skálázható, így nagy problémák megoldására is lehetőséget nyújt.
 	
-Matematikai háttér	6-8 oldal
+Matematikai háttér
 	Prím számok, faktorizáció
+		Egy p számot prímnek nevezünk, ha minden a,b-re amire p|a*b -> (p|a v p|b).
+		Természetes számok körében ez a definíció ekvivalens azzal, hogy egy prím számnak kettő, és csak kettő osztója van, 1 és önmaga.
+		A prím számok kitüntetett szerepet játszanak a matematikában. Többek közt felhasználják őket hasítótáblákhoz, pszeudovéletlen számok generálásához vagy nyílt kulcsú titkosításokhoz. Utóbbiak széles körben elterjedtek, valószínűleg sokan ismerik például az RSA kódolást, az SSH-t vagy a HTTPS-t. Ezek mind fontos részét képezik a modern kornak. A nyílt kulcsú kódolások olyan matematikai problémákon alapulnak, amelyeket megoldani nehéz, vagyis a mai eszközeinkkel valós időben nem lehetséges, viszont ellenőrizni egy lehetséges megoldást gyors és egyszerű. A leggyakrabban használt ilyen probléma a prím faktorizáció. 
+		Számelmélet alaptétele: minden pozitív szám felírható egyértelműen prímszámok szorzatára. 
+		Viszont, ennek a felbontásnak a megkeresése NP-nehéz probléma, vagyis nem tudunk jelenleg sokkal jobb módszert annál, mint hogy kipróbáljuk az összes lehetséges prím számot, hogy oszthója-e a felbontani kívánt számnak.
+		Tehát jól látszik, hogy a prím számok keresése kiemelten fontos feladat. Rengeteg módszer létezik arra, hogy prímeket keressünk. A dolgozat az ún. szitáló módszerekkel foglalkozik, konkrétabban ezek felhasználása prímszámok keresésére.
+			ezek mik, miért
 	Eraotsztenészi-szita
+			mi ez
+			hogy működik
+			műveletidő
+			memóriaigény
 		Hátrányok
+			cache missek
+			memória olvasás lassú
 	COLS
+			mi ez
+			hogyan működik matematikai szempontból
 		Előnyök
+			kevés memória olvasás
 	
-Felhasználói dokumentáció 6-8 oldal
-	A program funkciói
+Felhasználói dokumentáció
 	A program használata
-	A program bemenete
+		config fájlok, paraméterek
 	A program kimenete
 	CD tartalma, telepítés
+		LUL
 	
-Fejlesztői dokumentáció 10-12 oldal
+Fejlesztői dokumentáció
 	A program felépítése
+		fájlok szervezése
+		becnhmark
+		tester
+		források lefordítása
 	Adatszerkezetek
 		Szitatábla
+			szerep
+			inicializálása
+			offsetek
 		Szegmensek
+			megvalósítás
 		Körök és edények
+			megvalósítás
+			inicializálás, update
 	Párhuzamos megvalósítás
+		threadek közti felosztást hogy számolom ki
 	Skálázhatóság
+		64bites rendszer
+		memóriaigény
 	Tesztelés
+		hogyan kell
 	Rendszerkövetelmények
+		LUL
 	Továbbfejlesztési lehetőségek
+		skálázás, teszt unixon
 
-Az algoritmusok összehasonlítása 4-6 oldal
+Az algoritmusok összehasonlítása
 	Használt hardverek
+		a két gép specifikációja
 	Az eredmények
+		becnhmark.xlsből screenshot
+		milyen praméterekkel futtattam
 	Konklúzió
+		mennyivel gyorsabb
+		milyenek az optiális paraméterek
 	
-Összegzés 1-2 oldal
+Összegzés
 	
 Felhasznált irodalom

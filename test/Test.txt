@@ -1,8 +1,0 @@
-TODO
-
-	unit test
-	system test
-	verify results
-		collect test cases
-		
-	googletest?
