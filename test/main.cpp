@@ -68,15 +68,9 @@ int main(int argc, char *argv[])
 
 res start(std::string config, int number_of_threads, int number_of_chunks)
 {
-	word_t lower_bound = 0; // both should be a power of 2
-	word_t upper_bound = 0;
-
-	auto bounds = read_config(config);
-
-	lower_bound = bounds.first;
-	upper_bound = bounds.second;
-
-	Siever siever(number_of_chunks, lower_bound, upper_bound, number_of_threads);
+	input in = read_config(config);
+	
+	Siever siever(in);
 
 	siever.soe_init();
 	siever.soe_chunks();
@@ -84,7 +78,7 @@ res start(std::string config, int number_of_threads, int number_of_chunks)
 	Printer printer(&siever);
 	printer.print_sieving_table();
 	printer.print_primes_found();
-	return res(printer.get_primes_found(), lower_bound, upper_bound);
+	return res(printer.get_primes_found(), in.low, in.up);
 }
 
 std::vector<int> read_real_results()

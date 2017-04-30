@@ -1,2 +1,4 @@
-LOWER_BOUND 536870912
-UPPER_BOUND 1073741824
+lower bound: 536870912
+upper bound: 1073741824
+max number of chunks: 128
+number of threads: 16

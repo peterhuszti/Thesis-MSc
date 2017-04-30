@@ -29,6 +29,21 @@ typedef uint64_t prime_t;
 typedef uint64_t word_t;
 typedef uint16_t offset_t; // TODO: check the max size of this
 
+struct input
+{
+	word_t low;
+	word_t up;
+	int max_number_of_chunks;
+	int number_of_threads;
+	
+	input(word_t l, word_t u, int ch, int th):
+		low(l),
+		up(u),
+		max_number_of_chunks(ch),
+		number_of_threads(th)
+	{}
+};
+
 class Siever
 {
 
@@ -59,12 +74,14 @@ private:
 	struct Params_for_threads {int chunk_per_thread, first_chunk_to_sieve; prime_t starting_point;};
 	
 public:	
-
-	Siever(word_t max_number_of_chunks, word_t low, word_t up, int num_thread): 
-		lower_bound(low)
-		, upper_bound(up)
-		, number_of_threads(num_thread)
+	
+	Siever() = delete;
+	Siever(input in)
 	{
+		lower_bound = in.low;
+		upper_bound = in.up;
+		number_of_threads = in.number_of_threads;
+		
 		/**
 			Initial calculations.
 		*/
@@ -75,8 +92,8 @@ public:
 		nbits = last_number / 2 + 1;
 	
 		word_t chunk_temp = upper_bound - lower_bound;
-		number_of_chunks = max_number_of_chunks == 1 ? 1 : (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
-		while (number_of_chunks > max_number_of_chunks)
+		number_of_chunks = in.max_number_of_chunks == 1 ? 1 : (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
+		while (number_of_chunks > in.max_number_of_chunks)
 		{
 			number_of_chunks /= 2;
 		}

@@ -17,12 +17,13 @@ private:
 	Siever* siever;
 	
 	std::ofstream out;
+	std::string out_file;
 
 public:
 
-	Printer(Siever* s): siever(s) 
+	Printer(Siever* s, std::string o): siever(s), out_file(o)
 	{
-		out.open("result.txt", std::ofstream::out);
+		out.open(out_file, std::ofstream::out);
 	}
 	
 	~Printer()
