@@ -66,16 +66,42 @@ Az algoritumus: \par
 \clearpage
 \section{Felhasználói dokumentáció}
 
-\subsection{A program használata}
+\subsection{A program használata} \label{usage}
 
 \subsection{A program kimenete}
 
 \subsection{Rendszerkövetelmények}
 
+A program 64-bites Microsoft Windows operációs rendszer használatával íródott és lett tesztelve. (Windows 7 és 10) Így az ilyen operációs rendszereken biztosan helyesen működik. \par
+Ahhoz, hogy UNIX alapú operációs rendszeren, illetve 32-bites rendszereken használni tudjuk, ahhoz újra kell fordítani a programot. Lásd: \ref{build} Ezeken a rendszereken nem lett tesztelve a program, de nem használja ki a használt operációs rendszer által nyújtott lehetőségeket, ezért portolható. De természetesen ajánlott a tesztelő program használata is más rendszereken való használat előtt.
+
 \subsection{CD tartalma, telepítés}
+
+A \textit{docs} mappában található a programhoz tartozó dokumentáció .pdf formátumban. \par
+A \textit{source} mappában található a futtatható fájl, ennek neve sieve.exe. Ezt a fájlt futtatva indíthatjuk el a programot. Ebben a mappában találhatóak továbba a program forrásfájljai is.  A program konfigurálásához lásd: \ref{usage}. A program módosításához, illetve újrafordításához lásd: \ref{build} \par
+A program teszteléséhez használt fájlok a \texit{test} mappában találhatóak. Bővebben lásd: \ref{test} \par
+A \textit{result} mappába helyezi el a program a kiszámított eredményeket. Természetesen a CD-re nem tud írni a program. \par
+A \textit{benchmark} mappában találhatóak a programban elkészített algoritmusok segítségéhez használt fájlok. Itt található még korábbi mérési eredmények benchmark_result_dátum.xlsx néven. \par \par
+
+Telepítés: \par
+A program használható közvetlenül a CD-ről is, bár ekkor nem tudjuk a kapott ererdményeket megteinteni. Ehhez a CD tartalmát másoljuk fel a használni kívánt számítógépre, és ezek után a program a fentebb említett \textit{result} mappába fogja másolni az eredményeit.
 
 \clearpage
 \section{Fejlesztői dokumentáció}
+
+\subsection{Felhasznált technológiák}
+A program C++ programozási nyelv standard C++11-es verziójának használatával íródott. Semmilyen külső könyvtárat nem használ, így könnyen újrafordíthatja és portolhatja más rendszerre bárki. \par
+A párhuzamos szálakon történő futtatáshoz a standard C++11 által kínált \textbf{thread} könyvtár van felhasználva. \par
+A program fejlesztése során a verziókövetésre a GitHub online verziókövető rendszer volt használva. Egy program implementációja során kiemelten fontos egy hasonló szolgáltatás használata. Ennek segítségével könnyedén nyomon lehet követni a program fejlesztésének történetét, és egyszerűen lehet több számítógépről is folytatni a fejlesztést. A program megtalálható az alábbi helyen: https://github.com/peterhuszti/Thesis-MSc \par \par \par
+
+A program tesztelése szintén standard C++ segítsgével lett megoldva. \par
+A benchmark elkészítéséhez a Benchpress nevű frameworköt használtam. Ez egy nagyon egyszerűen és könnyen használható eszköz, amivel C++11 nyelven írt programok, vagy akár csak külön függvények és eljárások futási sebességét lehet mérni. REF
+TODO lamda \par
+
+\subsection{Fordítás} \label{build}
+
+Ahhoz, hogy le tudjuk újra fordítani a programot, ahhoz egy C++11 kompatibilis fordítóra van szükség. A program eredetileg a g++ 5.2.0-ás verziójával lett lefordítva, de semmi akadálya annak, hogy más megfelelő fordítóprogramot használjunk. \par
+Ha viszont g++-t használunk, akkor a következő javasolt g++ [-o sieve] -O3 -std=c++11 main.cpp. Az -o kapcsoló nem szükséges, ezzel csupán az elkészített futtatható fájl nevét tudjuk megadni. Az -std=c++11 paraméterrel tudjuk megadni, hogy a fordító a C++11-es szabvány szerint próbálja meg lefordítani a programot. Az -O3 paraméter egy optimalizációs paraméter. Ezekről bővebben lásd: \ref{optpar}
 
 \subsection{A program felépítése}
 
@@ -89,7 +115,7 @@ Az algoritumus: \par
 
 \subsection{Skálázhatóság}
 
-\subsection{Tesztelés}
+\subsection{Tesztelés} \label{test}
 
 \subsection{Továbbfejlesztési lehetőségek}
 
@@ -97,6 +123,8 @@ Az algoritumus: \par
 \section{Az algoritmusok összehasonlítása}
 
 \subsection{Használt hardverek}
+
+\subsection{Fordítási paraméterek} \label{optpar}
 
 \subsection{Az eredmények}
 
