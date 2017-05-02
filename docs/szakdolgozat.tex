@@ -53,12 +53,26 @@ Tehát jól látszik, hogy a prím számok megtalálása  kiemelten fontos felad
 
 \subsection{Eratoszthenészi-szita}
 
-Az Eratoszthenészi-szita, mint a nevéből is látszik már egy nagyon régen ismert algoritmus. Ennek ellenére, bármilyen meglepő is, ha gyorsan meg akarjuk keresni egy intervallumban az összes prím számot, akkor ehhez az algoritmushoz kell visszanyúlnunk. Ez egy egyszerű kizárásos algoritmus. A számelmélet alaptétele szerint az intervallumunkban minden szám, amelyik nem prím, osztható nálánál kisebb prím szám(ok)kal. Tehát, ha lenne egy listánk a kisebb prímekről, akkor azoknak meg tudnánk találni az intervallumunkban lévő többszöröseit, és amely szám egyik kis prímnek sem többszöröse, az prím szám. Ez az alap ötlet. \par
+Az Eratoszthenészi-szita, mint a nevéből is látszik már egy nagyon régen ismert algoritmus. Ennek ellenére, bármilyen meglepő is, ha gyorsan meg akarjuk keresni egy intervallumban az összes prím számot, akkor ehhez az algoritmushoz kell visszanyúlnunk. Ez egy egyszerű kizárásos algoritmus. A számelmélet alaptétele szerint az intervallumunkban minden szám, amelyik nem prím, osztható nálánál kisebb prím szám(ok)kal. Tehát, ha lenne egy listánk a kisebb prímekről (ezt a táblát nevezzük szitatáblának), akkor azoknak meg tudnánk találni az intervallumunkban lévő többszöröseit, és amely szám egyik kis prímnek sem többszöröse, az prím szám. Ez az alap ötlet. \par
 Az algoritumus: \par
 \begin{enumerate}
-\item Készítünk egylistát a kisebb prímekről, amelyekkel majd ki fogjuk szitálni a vizsgált intervallumot. De mit is jelent az, hogy kis prímek? Jelöljük az intervallumunkat, ahol keressük a prímeket \( [a, b] \)-vel. A első ötlet természetesen, hogy vizsgálunk minden 1-nél nagyobb de \(a\)-nál kisebb prímszámot. De kicsit jobban belegondolva erre egyáltalán nincs szükség. 
-\item 
+\item Készítünk egy listát a kisebb prímekről, amelyekkel majd ki fogjuk szitálni a vizsgált intervallumot. Ezt a listát magát is el lehet készíteni egy kisebb Erathosztenészi szitával. \par
+De mit is jelent az, hogy kis prímek? Jelöljük az intervallumunkat, ahol keressük a prímeket \( [a, b] \)-vel. A első ötlet természetesen, hogy vizsgálunk minden 1-nél nagyobb de \(b\)-nél kisebb prímszámot. De kicsit jobban belegondolva erre egyáltalán nincs szükség. \par 
+TODO: insert ábra. \par
+Elég $\sqrt{b}$-ig felmennünk a szitatábla felső korlátjával. Ahhoz, hogy ezt belássuk, vegyük észre, hogy minden a szitatáblában lévő, prímmel csak annak négyzetétől kell kezdenünk szitálni. \par 
+Jelöljük a szitatáblát [x,y]-nal. Ekkor legyen $x < z < y$. Ekkorra már kiszitáltunk minden x és z közé eső prímmel. Vagyis azok a számok, amelyek oszthatóak valamely $z$-nél kisebb prímmel, már ki vannak szitálva. Vagyis az első olyan szám, amit vizsgálnunk kell, az a $z^2$. \par
+Ebből már jól látszódik, egrészt az, hogy a fenti jelölést használva $y=\sqrt{b}$, másrészt ahogy haladunk előre a szitálóprímekkel, a vizsgált intervallum egyre kisebb lesz. Ez az egyszerűsítés rengeteget javít a program teljesítményén. Tfh. hogy $[x,y]=[10^6,4\cdot10^6]$. Ekkor a naív $4\cdot10^6$ szitatábla méret helyett elég mindössze $\sqrt{4\cdot10^6}=2000$ méretű tábla.
+\item Legyen \textit{p} a szitatábla első eleme, a legkisebb prím: 2.
+\item Jelöljük meg \textit{p} összes többszörösét a vizsgált intervallumban, kedzve $p^2$-től, ha $a<p^2 $.
+\item Legyen \textit{p} a szitatábla következő eleme, a következő szitáló prím. Ha nincs ilyen akkor vége az algoritmusnak. Ha van ilyen, akkor menj a 3. pontra.
 \end{enumerate}
+\bigskip
+Az iteráció végén a jelöletlenül maradt számok lesznek a keresett prím számok. Ha egy ilyen szám összetett lenne, akkor már biztosan meg lett volna jelölve, hiszen a számelmélet alaptétele szerint felírható kisebb prímszámok szorzataként, vagyis egy kisebb prímszámnak a többszöröse, amikkel pedig már szitáltunk.
+ \subsubsection{Hátrányok}
+Az algoritmus kisebb intervallumokra nagyon jól használható. A dolgozat során elvégzett mérések szerint körülbelül $2^17$-es nagyságrendig tartotta a lépést a később szóba kerülő COLS algoritmussal. De igazából algoritmikus módszerekkel nehéz tovább gyorsítani ezt a módszert. A nem prím számok kiszitálását nem tudjuk megúszni. \par
+Viszont közismert tény, hogy a memória műveletek nagyságrendekkel lassabbak, mint ahogy egy processzor képes végrehajtani műveleteket a már meglévő, a cache memóriában tárolt adatokon. És itt jön ki igazából a nagy hátránya az Erathosztenészi-szitának. Mi történik akkor, ha akkora intervallumot akarunk vizsgálni, amekkora nem fér be a memóriába? \par
+TODO: insert ábra \par
+Ahogy az ábrán is látszódik, ilyen esetben nem tudunk végigszitálni egy adott kis prímmel az egész intervallumon. Amint elérjük a cache "végét", nem fogja találni a keresett következő számot a program, ezt hívják \textbf{cache miss}nek. Ilyenkor be kell kérni a hiányzó adatot jó esetben a RAM memóriából, rosszabb esetben a háttértárról. Ráadásul, amint kiszitáltunk egy prímmel, kezdhetjük beolvasni előről az összes adatot, jó esély van rá, hogy a processzor már kidobda az intervallum elején kiszitált számokat. Vagyis ez azt jelenti, hogy legrosszabb esetben az intervallum összes számát újra és újra be kell olvasni, egészen pontosan $\sqrt{b}$-szer. Mondani sem kell, hogy ez mennyire lelassítja az program teljesítményét. Sejteni lehet, hogy a vizsgált intervallum növekedésével nem egyenesen arányos a program futásának ideje. Ezt később be is látjuk majd, lásd: \ref{benchmark}
 
 
 \subsection{COLS}
@@ -68,7 +82,8 @@ Az algoritumus: \par
 
 \subsection{A program használata} \label{usage}
 
-\subsection{A program kimenete}
+A program a \textbf{result/} mappába fogja elhelyezni a kiszámolt prímeket a result.txt fájlba, ha mást nem adtunk meg.\par
+TODO: insert ábra
 
 \subsection{Rendszerkövetelmények}
 
@@ -79,11 +94,11 @@ Ahhoz, hogy UNIX alapú operációs rendszeren, illetve 32-bites rendszereken ha
 
 A \textit{docs} mappában található a programhoz tartozó dokumentáció .pdf formátumban. \par
 A \textit{source} mappában található a futtatható fájl, ennek neve sieve.exe. Ezt a fájlt futtatva indíthatjuk el a programot. Ebben a mappában találhatóak továbba a program forrásfájljai is.  A program konfigurálásához lásd: \ref{usage}. A program módosításához, illetve újrafordításához lásd: \ref{build} \par
-A program teszteléséhez használt fájlok a \texit{test} mappában találhatóak. Bővebben lásd: \ref{test} \par
+A program teszteléséhez használt fájlok a \textit{test} mappában találhatóak. Bővebben lásd: \ref{test} \par
 A \textit{result} mappába helyezi el a program a kiszámított eredményeket. Természetesen a CD-re nem tud írni a program. \par
-A \textit{benchmark} mappában találhatóak a programban elkészített algoritmusok segítségéhez használt fájlok. Itt található még korábbi mérési eredmények benchmark_result_dátum.xlsx néven. \par \par
+A \textit{benchmark} mappában találhatóak a programban elkészített algoritmusok segítségéhez használt fájlok. Itt található még korábbi mérési eredmények benchmark\_result\_dátum.xlsx néven. \bigskip
 
-Telepítés: \par
+\noindent \underline{Telepítés:} \par
 A program használható közvetlenül a CD-ről is, bár ekkor nem tudjuk a kapott ererdményeket megteinteni. Ehhez a CD tartalmát másoljuk fel a használni kívánt számítógépre, és ezek után a program a fentebb említett \textit{result} mappába fogja másolni az eredményeit.
 
 \clearpage
@@ -92,7 +107,7 @@ A program használható közvetlenül a CD-ről is, bár ekkor nem tudjuk a kapo
 \subsection{Felhasznált technológiák}
 A program C++ programozási nyelv standard C++11-es verziójának használatával íródott. Semmilyen külső könyvtárat nem használ, így könnyen újrafordíthatja és portolhatja más rendszerre bárki. \par
 A párhuzamos szálakon történő futtatáshoz a standard C++11 által kínált \textbf{thread} könyvtár van felhasználva. \par
-A program fejlesztése során a verziókövetésre a GitHub online verziókövető rendszer volt használva. Egy program implementációja során kiemelten fontos egy hasonló szolgáltatás használata. Ennek segítségével könnyedén nyomon lehet követni a program fejlesztésének történetét, és egyszerűen lehet több számítógépről is folytatni a fejlesztést. A program megtalálható az alábbi helyen: https://github.com/peterhuszti/Thesis-MSc \par \par \par
+A program fejlesztése során a verziókövetésre a GitHub online verziókövető rendszer volt használva. Egy program implementációja során kiemelten fontos egy hasonló szolgáltatás használata. Ennek segítségével könnyedén nyomon lehet követni a program fejlesztésének történetét, és egyszerűen lehet több számítógépről is folytatni a fejlesztést. A program megtalálható az alábbi helyen: https://github.com/peterhuszti/Thesis-MSc \par
 
 A program tesztelése szintén standard C++ segítsgével lett megoldva. \par
 A benchmark elkészítéséhez a Benchpress nevű frameworköt használtam. Ez egy nagyon egyszerűen és könnyen használható eszköz, amivel C++11 nyelven írt programok, vagy akár csak külön függvények és eljárások futási sebességét lehet mérni. REF
@@ -126,7 +141,7 @@ Ha viszont g++-t használunk, akkor a következő javasolt g++ [-o sieve] -O3 -s
 
 \subsection{Fordítási paraméterek} \label{optpar}
 
-\subsection{Az eredmények}
+\subsection{Az eredmények} \label{benchmark}
 
 \subsection{Konklúzió}
 
