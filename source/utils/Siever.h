@@ -22,6 +22,8 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 #define DEBUG true // true if we want to print debug info
 #define PRIMES true // true if we want to show the found primes
  
@@ -67,17 +69,22 @@ private:
 	int number_of_threads;
 	int chunk_per_thread;
 	int plus_one_sieve; // how many thread have to sieve one more chunk than the others (< number_of_threads)
-	int max_circles;
-	int max_buckets;
+	int number_of_circles;
+	int number_of_buckets;
 	
 	word_t* st; // sieving table
 	offset_t** ot; // offset table
 	word_t** chunks;
 	bucket_t** buckets;
-	circle_t** circles;
+	circle_t* circles;
 	std::vector<std::thread> threads;
 	
-	struct Params_for_threads {int chunk_per_thread, first_chunk_to_sieve; prime_t starting_point;};
+	struct Params_for_threads 
+	{
+		int chunk_per_thread;
+		int first_chunk_to_sieve;
+		prime_t starting_point;
+	};
 	
 public:	
 	
@@ -141,26 +148,23 @@ public:
 			ot[i] = new offset_t[nbits];
 		}
 		
-		int max_circles = TODO;
+		number_of_circles = (nbits / chunk_bits) + 1;
 		/**
 			Allocate circles
-			Every thread needs its own circles, because it will reference the offset tables
+			The circles reference the offset tables, but they won't be modified during the run, 
+			so don't need to allocate for all threads.
 		*/
-		circles = new circle_t[number_of_threads];
-		for (size_t i=0; i<number_of_threads; ++i)
-		{
-			circles[i] = new circle_t[max_circles];
-		}
+		circles = new circle_t[number_of_circles];
 		
-		int max_buckets = TODO;
+		number_of_buckets = number_of_circles * (number_of_circles+1) / 2;
 		/**
 			Allocate buckets
 			Every thread needs its own buckets, because it will reference the offset tables
 		*/
-		buckets = new bucket_t[number_of_threads];
+		buckets = new bucket_t*[number_of_threads];
 		for (size_t i=0; i<number_of_threads; ++i)
 		{
-			buckets[i] = new bucket_t[max_buckets];
+			buckets[i] = new bucket_t[number_of_buckets];
 		}
 	}
 	
@@ -173,7 +177,6 @@ public:
 		delete[] chunks;
 		for (size_t i=0; i<number_of_threads; i++) delete[] ot[i];
 		delete[] ot;
-		for (size_t i=0; i<number_of_threads; i++) delete[] circles[i];
 		delete[] circles;
 		for (size_t i=0; i<number_of_threads; i++) delete[] buckets[i];
 		delete[] buckets;
@@ -212,6 +215,8 @@ public:
 	 */
 	void soe_chunks()
 	{	
+		init_circles();
+	
 		std::vector<Params_for_threads> params(number_of_threads);
 
 		for (size_t j=0; j<number_of_threads; ++j)
@@ -230,6 +235,7 @@ public:
 		}
 		
 		init_offsets(params);
+		init_buckets();
 	
 		for (size_t thread_id=0; thread_id<number_of_threads; ++thread_id)
 		{
@@ -255,10 +261,6 @@ public:
 							}
 						}
 					}
-					if (!last_chunk)
-					{
-						params[thread_id].starting_point += this->chunk_bits;
-					}
 				}
 			}));
 		}
@@ -283,7 +285,7 @@ private:
 	{
 		for (size_t j=0; j<number_of_threads; ++j) // for all threads
 		{
-			for(size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
+			for (size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
 			{	
 				if (!GET( st, i )) // if it's a prime, then we calculate offset
 				{
@@ -303,6 +305,48 @@ private:
 	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
 	{
 		ot[thread_id][prime_index] = last_offset - chunk_bits;
+	}
+	
+	/**
+		Initializes the cirlces.
+	*/
+	void init_circles()
+	{
+		word_t temp = chunk_bits;
+		for (size_t i=0; i<number_of_circles; ++i)
+		{
+			circles[i] = MAX(temp, nbits);
+			temp += chunk_bits;
+		}
+	}
+	
+	/**
+		Initializes the buckets.
+	*/
+	void init_buckets()
+	{
+		for (size_t j=0; j<number_of_threads; ++j) // for all threads
+		{
+			for (size_t i=0; i<number_of_circles; ++i)
+			{
+				offset_t b = chunk_bits;
+				size_t p = 0;
+				for (size_t k=0; k<i+1; ++k)
+				{
+					for (; p < circles[i] && ot[j][k] < b; ++p) { }
+					buckets[j][k] = p-1;
+					b += chunk_bits;
+				}
+			}
+		}
+	}
+	
+	/**
+		Updates the buckets.
+	*/
+	void update_buckets()
+	{
+		
 	}
 	
 	/**

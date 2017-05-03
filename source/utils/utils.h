@@ -68,7 +68,7 @@ void start(int argc, char *argv[])
 	
 	#if PRIMES
 		printer.print_sieving_table();
-//		printer.print_primes_found();
+		printer.print_primes_found();
 	#endif
 	
 	#if DEBUG
