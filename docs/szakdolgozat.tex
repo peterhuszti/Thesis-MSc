@@ -30,14 +30,16 @@
 
 \subsection{A dolgozat célja, motiváció}
 
-Az alkalmazott matematikában nagyon fontos szerepet játszanak az prím számok, elég csak például a nyílt kulcsos titkosítási módszerekre gondolnunk. Ebből kifolyólag az évek során nagyon sok módszert fejlesztettek ki prímsázmok keresésére, például a Fermat-teszt, vagy a Miller-Rabin teszt. Ezen módszerekkel elég gyorsan el lehet dönteni egy darab számról, hogy prím-e vagy sem, és így ezért az ilyen algoritmusokkal nagyon nagy prímeket is meg lehet találni viszonylag gyorsan. \par
+Az alkalmazott matematikában nagyon fontos szerepet játszanak a prím számok, elég csak például a nyílt kulcsos titkosítási módszerekre gondolnunk. Ebből kifolyólag az évek során nagyon sok módszert fejlesztettek ki prímsázmok keresésére, például a Fermat-teszt, vagy a Miller-Rabin teszt. Ezen módszerekkel elég gyorsan el lehet dönteni egy darab számról, hogy prím-e vagy sem, és így ezért az ilyen algoritmusokkal nagyon nagy prímeket is meg lehet találni viszonylag gyorsan. \par
 Előfordulhat azonban probléma, hogy egy adott intervallumban szeretnénk megtalálni az ott lévő összes prím számot. Az ilyen feladatok megoldására a leghatékonyabb módszerek a szitáló módszerek. Ezek úgy működnek, hogy kiválasztunk bizonyos számokat, és azokkal "végigszitálunk" a vizsgált intervallumon, és az érintetlenül hagyott számok lesznek a nekünk megfelelő, jelen esetben prím számok. Ezek közül is a legegyszerűbb egészen az ókorig nyúlik vissza, az ún. Erathosztenészi-szita. Ez az algoritmus ahhoz képest, hogy milyen rég óta ismert, meglepően hatékonyan működik. De természetesen vannak hátrányai, például hiába tűnik nagyon gyorsnak komplexitás szempontjából, elég nagy intervallumokra nagyon meg fog növekedni a memória olvasások száma, ami mint köztudott nagyságrendekkel lassabb, mint a processzorok utasítás végrehajtó képessége már a memóriában lévő adatokon. Nem meglepő módon sok féle képpen fel lehet javítani az algoritmus teljesítményét mai modern eszközökkel. \par
 A dolgozat célja az, hogy a fent említett "naív" szitáló algoritmus teljesítményét növeljük, miközben a program skálázható is maradjon, és így a valós gyakorlati életben is alkalmazni lehessen. A dolgozat során két féle módon próbáltam meg javítani a teljesítményen.\par
 Az első és talán legkézenfekvőbb módszer a program párhuzamosítása. Ezt viszonylag egyszerűen meg lehet tenni, mivel az algoritmust könnyedén fel lehet darabolni kisebb, egymással ekvivalens részfeladatokra, amiket szét lehet osztani a processzor szálai közt. Ráadásul a konkurens programokra jellenző veszélyek nem állnak fent, így sok nehézségtől meg tudjuk kímélni magunkat, ami a teljesítményt is javítja. \par
 A másik megközelítés, hogy a memóriaműveletek számát próbáljuk meg minimalizálni. Erre egy hatékony megvalósítása az ún. COLS - cache optimalizált lineáris szita - algoritmus, aminek az megvalósítása is része a dolgozatnak.\par
 Végül a fentiekből magától értetődik egy újabb gyorsítási lehetőség, hogy a COLS algoritmust is meg lehet valósítani párhuzamos szálakon, ami mint majd később látjuk megint csak nagy teljesítménynövekedéssel járhat.\par
-A dolgozat során implementáltam a fent említett négy algoritmust, és azt vizsgáltam, hogy milyen esetekben (a probléma mérete, hardver specifikációja) mennyire tudják, ha egyáltalán lehetséges, felgyorsítani a fenit módszerek a probléma megoldását. Az algoritmusokat C++ nyelvben valósítottam meg, csak és kizárólag a standard C++11 szabvány által kínált lehetőségeket felhasználva.\par
-Az elészített programmal könnyen és gyorsan lehet egy megadott intervallumon megkeresni a prím számokat, továbbá megfelelően paraméterezhető a rendelkezésre álló processzor(ok) tulajdonságainak ismeretében. A program jól skálázható, így nagy problémák megoldására is lehetőséget nyújt.
+A dolgozat során implementálva lett a fent említett négy algoritmus, és az volt vizsgálva, hogy milyen esetekben (a probléma mérete, hardver specifikációja) mennyire tudják, ha egyáltalán lehetséges, és mint kiderült nagyon is az, felgyorsítani a fenit módszerek a probléma megoldását. Az algoritmusokat C++ nyelvben valósítottam meg, csak és kizárólag a standard C++11 szabvány által kínált lehetőségeket felhasználva.\par \bigskip
+Az elészített programmal könnyen és gyorsan lehet egy megadott intervallumon megkeresni a prím számokat, továbbá megfelelően paraméterezhető a rendelkezésre álló processzor(ok) tulajdonságainak ismeretében. A program jól skálázható, és elméletben akár nagyobb, sok központi számítóegységből álló konfigurációk, plédául szuperszámítógépeken is lehet használni, és így nagy, valós problémák megoldására is lehetőséget nyújt. \par \bigskip
+A dolgozat során elkészített programot fel lehet használni többek között Cunningham-láncok keresésére is. Ezek a láncok egymáshoz közel elhelyezkedő prímekből állnak és felhasználják például az ún. Primecoin digitális fizetőeszköz bányászására. \par \bigskip
+A COLS algoritmust, és a mögötte húzódó elméletet nem csak az Erathosztenészi-szita felgyorsítására lehet felhasználni, hanem többek között például az ún. SIQS algoritmus, vagyis az öninicializáló kvadratikus szita javítására is, ami egy elég hatékony faktorizáló algoritmus.
 
 \clearpage
 \section{Matematikai háttér}
@@ -63,18 +65,35 @@ Elég $\sqrt{b}$-ig felmennünk a szitatábla felső korlátjával. Ahhoz, hogy 
 Jelöljük a szitatáblát [x,y]-nal. Ekkor legyen $x < z < y$. Ekkorra már kiszitáltunk minden x és z közé eső prímmel. Vagyis azok a számok, amelyek oszthatóak valamely $z$-nél kisebb prímmel, már ki vannak szitálva. Vagyis az első olyan szám, amit vizsgálnunk kell, az a $z^2$. \par
 Ebből már jól látszódik, egrészt az, hogy a fenti jelölést használva $y=\sqrt{b}$, másrészt ahogy haladunk előre a szitálóprímekkel, a vizsgált intervallum egyre kisebb lesz. Ez az egyszerűsítés rengeteget javít a program teljesítményén. Tfh. hogy $[x,y]=[10^6,4\cdot10^6]$. Ekkor a naív $4\cdot10^6$ szitatábla méret helyett elég mindössze $\sqrt{4\cdot10^6}=2000$ méretű tábla.
 \item Legyen \textit{p} a szitatábla első eleme, a legkisebb prím: 2.
-\item Jelöljük meg \textit{p} összes többszörösét a vizsgált intervallumban, kedzve $p^2$-től, ha $a<p^2 $.
-\item Legyen \textit{p} a szitatábla következő eleme, a következő szitáló prím. Ha nincs ilyen akkor vége az algoritmusnak. Ha van ilyen, akkor menj a 3. pontra.
+\item Jelöljük meg \textit{p} összes többszörösét a vizsgált intervallumban, kedzve $p^2$-től, ha $a<p^2 $. \label{szita}
+\item Legyen \textit{p} a szitatábla következő eleme, a következő szitáló prím. Ha nincs ilyen akkor vége az algoritmusnak. Ha van ilyen, akkor folytassuk a \ref{szita}. ponttal.
 \end{enumerate}
+TODO: insert stuki \par
 \bigskip
 Az iteráció végén a jelöletlenül maradt számok lesznek a keresett prím számok. Ha egy ilyen szám összetett lenne, akkor már biztosan meg lett volna jelölve, hiszen a számelmélet alaptétele szerint felírható kisebb prímszámok szorzataként, vagyis egy kisebb prímszámnak a többszöröse, amikkel pedig már szitáltunk.
- \subsubsection{Hátrányok}
+ \subsubsection{Hátrányok} \label{badbad}
 Az algoritmus kisebb intervallumokra nagyon jól használható. A dolgozat során elvégzett mérések szerint körülbelül $2^17$-es nagyságrendig tartotta a lépést a később szóba kerülő COLS algoritmussal. De igazából algoritmikus módszerekkel nehéz tovább gyorsítani ezt a módszert. A nem prím számok kiszitálását nem tudjuk megúszni. \par
 Viszont közismert tény, hogy a memória műveletek nagyságrendekkel lassabbak, mint ahogy egy processzor képes végrehajtani műveleteket a már meglévő, a cache memóriában tárolt adatokon. És itt jön ki igazából a nagy hátránya az Erathosztenészi-szitának. Mi történik akkor, ha akkora intervallumot akarunk vizsgálni, amekkora nem fér be a memóriába? \par
 TODO: insert ábra \par
 Ahogy az ábrán is látszódik, ilyen esetben nem tudunk végigszitálni egy adott kis prímmel az egész intervallumon. Amint elérjük a cache "végét", nem fogja találni a keresett következő számot a program, ezt hívják \textbf{cache miss}nek. Ilyenkor be kell kérni a hiányzó adatot jó esetben a RAM memóriából, rosszabb esetben a háttértárról. Ráadásul, amint kiszitáltunk egy prímmel, kezdhetjük beolvasni előről az összes adatot, jó esély van rá, hogy a processzor már kidobda az intervallum elején kiszitált számokat. Vagyis ez azt jelenti, hogy legrosszabb esetben az intervallum összes számát újra és újra be kell olvasni, egészen pontosan $\sqrt{b}$-szer. Mondani sem kell, hogy ez mennyire lelassítja az program teljesítményét. Sejteni lehet, hogy a vizsgált intervallum növekedésével nem egyenesen arányos a program futásának ideje. Ezt később be is látjuk majd, lásd: \ref{benchmark}
 
+\subsection{Szegmensenkénit szitálás}
 
+A \ref{badbad} fejezetben látott hátrányt mindenképp ki kell küszöbölni, ha valós környezetben is alkalmazható alkalmazást implementálni. Ugyanis a naív Erathosztenészi-szita nagyobb számok illetve intervallumok esetében az idő nagy részében a memóriából fog olvasni. Ez a probléma csak akkor fog jól látszódni, ha már akkora intervallumot szitálunk, ami nem fér bele a cache memóriába. Ez azért fordul elő, mert egyesével vesszük ki a prímeket a szitatáblából, és utána egyesével dolgozunk velük. Viszont ha megfordítanánk az algoritmust, és az intervallumból vennénk ki egy darabot, és ezzel dolgoznánk a szitatáblán, akkor megoldódna minden memória problémánk. Ugyanis a szitatábla mindössze $\sqrt{b}$ méretű, ami valószínűleg könnyedén elfér a lokális memóriában. \par 
+Az előbb említett darabot, amit kiveszünk az intervallumból nevezzük szegmensnek, vagy angolul \textit{chunk}-nak. Ötlet: daraboljuk fel az egész intervallumot ilyen szegmensekre, és ezeket egyesével szitáljuk ki teljesen, majd írjuk vissza a memóriába. Így elérhetjük, hogy minden vizsgált szám mindössze egyszer kerüljön beolvasásra, nagyságrendekkel redukálva így a memória olvasások és írások számát. \par
+Így tehát az algoritmus: \par
+\begin{enumerate}
+\item Készítsük el a kisebb prímekből alló szitatáblát a naív algoritmushoz hasonló módon.
+\item Daraboljuk fel a vizsgált intervallumot alkalmasan sok szegmensre. Ara, hogy pontosan mennyire finom felosztás a legjobb választás nem lehet általánosan jó választ adni. Függ a használt számítógép specifikációjától. Valamint természetesen egy számítógép közben sok más dologra is használja a cache memóriáját, így nem lehet előre egy legjobb felosztást mondani. Ráadásul ha túl finom felosztást választunk, akkor pedig lehet, hogy csak felesleges overheadet okozunk a programnak. \par
+Viszont kisebb, de már elég nagy példákon kísérletezve be lehet lőni azt, hogy körülbelül mi lenne a legmegfelelőbb felosztás.
+\item Olvassuk be az első szegmenst a memóriába.
+\item Legyen \textit{p} a szitatábla első eleme. \label{chunkszita}
+\item Jelöljük meg \textit{p} összes többszörösét a beolvasott szegmensben, kezdve $p^2$-től, ha $a<p^2$.
+\item Legyen \textit{p} a szitatáblából a következő szitáló prím. Ha nincs ilyen, akkor kész vagyunk az aktuális szegmens kiszitálásával, vagyis már akár ebből a szegmensből ki is lehetne olvasni a benne lévő prím számokat. Ekkor olvassuk be a következő szegmenst, és folytassuk a \ref{chunkszita}-es ponttal. \par
+Ha viszont nincs több szegmens, akkor készen vagyunk, vége az algoritmusnak. 
+\end{enumerate}
+TODO: insert stuki \par
+Amint később látni fogjuk, csak ezzel a módosítással volt, hogy több mint 3-szoros sebesség csökkenést lehetett elérni. Lásd: \ref{benchmark}
 \subsection{COLS}
 
 \clearpage
@@ -108,10 +127,8 @@ A program használható közvetlenül a CD-ről is, bár ekkor nem tudjuk a kapo
 A program C++ programozási nyelv standard C++11-es verziójának használatával íródott. Semmilyen külső könyvtárat nem használ, így könnyen újrafordíthatja és portolhatja más rendszerre bárki. \par
 A párhuzamos szálakon történő futtatáshoz a standard C++11 által kínált \textbf{thread} könyvtár van felhasználva. \par
 A program fejlesztése során a verziókövetésre a GitHub online verziókövető rendszer volt használva. Egy program implementációja során kiemelten fontos egy hasonló szolgáltatás használata. Ennek segítségével könnyedén nyomon lehet követni a program fejlesztésének történetét, és egyszerűen lehet több számítógépről is folytatni a fejlesztést. A program megtalálható az alábbi helyen: https://github.com/peterhuszti/Thesis-MSc \par
-
-A program tesztelése szintén standard C++ segítsgével lett megoldva. \par
-A benchmark elkészítéséhez a Benchpress nevű frameworköt használtam. Ez egy nagyon egyszerűen és könnyen használható eszköz, amivel C++11 nyelven írt programok, vagy akár csak külön függvények és eljárások futási sebességét lehet mérni. REF
-TODO lamda \par
+A program tesztelése szintén standard C++ segítsgével lett megoldva. A dolgozat során ahol lehetett próbáltam a C++11-es szabvány által nyújtott lehetőségeket kihasználni. Erre jó példa a thread könyvtár használata, ami egy nagyon egyszerű API-t kínál szálak definiálására és általában konkurens programok készítésére. Továbba ki van hasnzálva a C++-ban újdonságnak számító lambda kifejezések ereje is. Ezeknek a lambdáknak, vagy más néven névtelen eljárásoknak a különlegessége, hogy nem tartozik hozzájuk azonosító. Ezeket felhasnzálva egyszerűen tudunk eljárásokat paraméterül adni magasabb rendű függvényeknek, például szálak viselkedésének a megadásakor. \par
+A benchmark elkészítéséhez a Benchpress nevű frameworköt használtam. Ez egy nagyon egyszerűen és könnyen használható eszköz, amivel C++11 nyelven írt programok, vagy akár csak külön függvények és eljárások futási sebességét lehet mérni. REF \par
 
 \subsection{Fordítás} \label{build}
 
@@ -128,7 +145,7 @@ Ha viszont g++-t használunk, akkor a következő javasolt g++ [-o sieve] -O3 -s
 
 \subsection{Párhuzamos megvalósítás}
 
-\subsection{Skálázhatóság}
+\subsection{Skálázhatóság} \label{scale}
 
 \subsection{Tesztelés} \label{test}
 
@@ -138,6 +155,39 @@ Ha viszont g++-t használunk, akkor a következő javasolt g++ [-o sieve] -O3 -s
 \section{Az algoritmusok összehasonlítása}
 
 \subsection{Használt hardverek}
+
+A dolgozat során kettő konfiguráción volt lehetőség tesztelni a program és az algoritmusok sebességét és teljesítményét: \bigskip \bigskip \bigskip
+
+'A' konfiguráció ~~~~~~~~
+\begin{tabular}{ | c | }
+  \hline
+  Intel Core i5-5300U @ 2.3GHz \\ \hline
+  2 core, 4 thread \\ \hline
+  3 MB cache \\ \hline
+  Max. memória sávszélesség: 25.6 GB/s \\ \hline
+  8 GB RAM\\ \hline
+  64-bit Windows 7 \\
+  \hline
+\end{tabular}
+
+\bigskip \bigskip
+
+'B' konfiguráció ~~~~~~~~
+\begin{tabular}{ | c | }
+  \hline
+  Intel Core i7-4790 @ 3.6GHz \\ \hline
+  4 core, 8 thread \\ \hline
+  8 MB cache \\ \hline
+  Max. memória sávszélesség: 25.6 GB/s \\ \hline
+  16 GB RAM\\ \hline
+  64-bit Windows 10 \\
+  \hline
+\end{tabular}
+
+\bigskip \bigskip
+
+Érdemes megjegyezni, hogy az 'A' konfiguráció egy laptop, míg a 'B' egy asztali számítógép. Később jól fog látszódni a két számítógép közötti teljesítmény különbség. \par
+Korábban volt szó a skálázhatóságról, lásd \ref{scale}. Érdekes lenne kipróbálni egy nagyobb, több processzort tartalmazó konfiguráción is a programot, de erre sajnos a dolgozat készítése során nem volt lehetőség.
 
 \subsection{Fordítási paraméterek} \label{optpar}
 
