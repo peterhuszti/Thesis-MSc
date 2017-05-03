@@ -18,7 +18,7 @@ struct res
 	res(std::vector<int> p, int l, int u): primes(p), low(l), up(u) { }
 };
 
-res start(std::string, int, int);
+res start(std::string);
 std::vector<int> read_real_results();
 void compare(const std::vector<int>&, const res&);
 
@@ -27,46 +27,19 @@ int main(int argc, char *argv[])
 	res my_results;
 	const std::vector<int> real_results = read_real_results();	
 
-	std::cout << "Running SOE_SEQ.....\n" << std::flush;
+	std::cout << "Running tests.....\n" << std::flush;
 
 	std::cout << "    config1.txt\n" << std::flush;
-	my_results = start("../source/utils/config1.txt", 1, 1);
+	my_results = start("../source/utils/config1.txt");
 	compare(real_results, my_results);
 	std::cout << "    config2.txt\n" << std::flush;
-	my_results = start("../source/utils/config2.txt", 1, 1);
-	compare(real_results, my_results);
-
-	std::cout << "\n\nRunning SOE_PAR.....\n" << std::flush;
-
-	std::cout << "    config1.txt\n" << std::flush;
-	my_results = start("../source/utils/config1.txt", 8, 1);
-	compare(real_results, my_results);
-	std::cout << "    config2.txt\n" << std::flush;
-	my_results = start("../source/utils/config2.txt", 8, 1);
-	compare(real_results, my_results);
-
-	std::cout << "\n\nRunning COLS_SEQ.....\n" << std::flush;
-
-	std::cout << "    config1.txt\n" << std::flush;
-	my_results = start("../source/utils/config1.txt", 1, 128);
-	compare(real_results, my_results);
-	std::cout << "    config2.txt\n" << std::flush;
-	my_results = start("../source/utils/config2.txt", 1, 128);
-	compare(real_results, my_results);
-	
-	std::cout << "\n\nRunning COLS_PAR.....\n" << std::flush;
-
-	std::cout << "    config1.txt\n" << std::flush;
-	my_results = start("../source/utils/config1.txt", 8, 128);
-	compare(real_results, my_results);
-	std::cout << "    config2.txt\n" << std::flush;
-	my_results = start("../source/utils/config2.txt", 8, 128);
+	my_results = start("../source/utils/config2.txt");
 	compare(real_results, my_results);
 	
 	return 0;
 }
 
-res start(std::string config, int number_of_threads, int number_of_chunks)
+res start(std::string config)
 {
 	input in = read_config(config);
 	
@@ -75,7 +48,7 @@ res start(std::string config, int number_of_threads, int number_of_chunks)
 	siever.soe_init();
 	siever.soe_chunks();
 
-	Printer printer(&siever);
+	Printer printer(&siever, "test_results.txt");
 	printer.print_sieving_table();
 	printer.print_primes_found();
 	return res(printer.get_primes_found(), in.low, in.up);
