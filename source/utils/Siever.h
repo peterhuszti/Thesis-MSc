@@ -22,12 +22,14 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define DEBUG false // true if we want to print debug info
+#define DEBUG true // true if we want to print debug info
 #define PRIMES true // true if we want to show the found primes
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
 typedef uint16_t offset_t; // TODO: check the max size of this
+typedef prime_t bucket_t;
+typedef prime_t circle_t;
 
 struct input
 {
@@ -65,10 +67,14 @@ private:
 	int number_of_threads;
 	int chunk_per_thread;
 	int plus_one_sieve; // how many thread have to sieve one more chunk than the others (< number_of_threads)
+	int max_circles;
+	int max_buckets;
 	
 	word_t* st; // sieving table
 	offset_t** ot; // offset table
 	word_t** chunks;
+	bucket_t** buckets;
+	circle_t** circles;
 	std::vector<std::thread> threads;
 	
 	struct Params_for_threads {int chunk_per_thread, first_chunk_to_sieve; prime_t starting_point;};
@@ -134,6 +140,28 @@ public:
 		{
 			ot[i] = new offset_t[nbits];
 		}
+		
+		int max_circles = TODO;
+		/**
+			Allocate circles
+			Every thread needs its own circles, because it will reference the offset tables
+		*/
+		circles = new circle_t[number_of_threads];
+		for (size_t i=0; i<number_of_threads; ++i)
+		{
+			circles[i] = new circle_t[max_circles];
+		}
+		
+		int max_buckets = TODO;
+		/**
+			Allocate buckets
+			Every thread needs its own buckets, because it will reference the offset tables
+		*/
+		buckets = new bucket_t[number_of_threads];
+		for (size_t i=0; i<number_of_threads; ++i)
+		{
+			buckets[i] = new bucket_t[max_buckets];
+		}
 	}
 	
 	/**
@@ -145,6 +173,10 @@ public:
 		delete[] chunks;
 		for (size_t i=0; i<number_of_threads; i++) delete[] ot[i];
 		delete[] ot;
+		for (size_t i=0; i<number_of_threads; i++) delete[] circles[i];
+		delete[] circles;
+		for (size_t i=0; i<number_of_threads; i++) delete[] buckets[i];
+		delete[] buckets;
 		delete[] st;
 	}
 
@@ -199,38 +231,36 @@ public:
 		
 		init_offsets(params);
 	
-		for (size_t j=0; j<number_of_threads; ++j)
+		for (size_t thread_id=0; thread_id<number_of_threads; ++thread_id)
 		{
-			threads.push_back( std::thread( [this, j, &params] {
-				for (size_t k=0; k<params[j].chunk_per_thread; ++k) // iterate through the chunks
+			threads.push_back( std::thread( [this, thread_id, &params] {
+				for (size_t chunk_id=0; chunk_id<params[thread_id].chunk_per_thread; ++chunk_id) // iterate through the chunks
 				{
-					bool last_chunk = (k == params[j].chunk_per_thread - 1);
-					for(size_t i=1; i<this->nbits; ++i) // start from 1 if 1 is in primes
+					bool last_chunk = (chunk_id == params[thread_id].chunk_per_thread - 1);
+					for(size_t prime_index=1; prime_index<this->nbits; ++prime_index) // start from 1 if 1 is in primes
 					{
-						if (!GET( this->st, i )) // if it's a prime, then we sieve
+						if (!GET( this->st, prime_index )) // if it's a prime, then we sieve
 						{
-							prime_t p = I2P(i); // the prime in dec
-							prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
+							prime_t p = I2P(prime_index); // the prime in dec
+							prime_t offset = this->ot[thread_id][prime_index]; // get the offset of the current prime in the actual chunk
 
-							q = this->ot[j][i];
-
-							while (q < this->chunk_bits) // while we are in the chunk
+							while (offset < this->chunk_bits) // while we are in the chunk
 							{
-								SET(this->chunks[params[j].first_chunk_to_sieve+k], q); // mark as composite
-								q += p; // next multiplier
+								SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
+								offset += p; // next multiplier
 							}
 							if (!last_chunk) // if we are at the last chunk than we can spare the calculation of offsets
 							{
-								update_offset(j, i, q);
+								update_offset(thread_id, prime_index, offset);
 							}
 						}
 					}
 					if (!last_chunk)
 					{
-						params[j].starting_point += this->chunk_bits;
+						params[thread_id].starting_point += this->chunk_bits;
 					}
 				}
-			}));			
+			}));
 		}
 		
 		for (size_t j=0; j<number_of_threads; ++j)

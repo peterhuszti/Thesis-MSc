@@ -35,23 +35,23 @@ public:
 	{
 		std::cout << "Sieve of Eratosthenese\n\n";
 		
-		std::cout << "lower bound " << siever->lower_bound << std::endl;
-		std::cout << "upper bound " << siever->upper_bound << std::endl;
+		std::cout << "lower bound " << siever->lower_bound << std::endl << std::flush;
+		std::cout << "upper bound " << siever->upper_bound << std::endl << std::flush;
 		
-		std::cout << "number of chunks " << siever->number_of_chunks << std::endl;
+		std::cout << "number of chunks " << siever->number_of_chunks << std::endl << std::flush;
 		
-		std::cout << "chunk_size " << siever->chunk_size << std::endl;
-		std::cout << "chunk_bits " << siever->chunk_bits << std::endl;
+		std::cout << "chunk_size " << siever->chunk_size << std::endl << std::flush;
+		std::cout << "chunk_bits " << siever->chunk_bits << std::endl << std::flush;
 		
-		std::cout << "last number " << siever->last_number << std::endl;
-		std::cout << "log upper bound " << siever->log_upper_bound << std::endl;
+		std::cout << "last number " << siever->last_number << std::endl << std::flush;
+		std::cout << "log upper bound " << siever->log_upper_bound << std::endl << std::flush;
 			
-		std::cout << "size of st " << siever->size_of_st << std::endl;
-		std::cout << "nbits " << siever->nbits << "\n\n";
+		std::cout << "size of st " << siever->size_of_st << std::endl << std::flush;
+		std::cout << "nbits " << siever->nbits << "\n\n" << std::flush;
 		
-		std::cout << "number of threads " << siever->number_of_threads << std::endl;
-		std::cout << "chunk per thread " << siever->chunk_per_thread << std::endl;
-		std::cout << "plus one sieve " << siever->plus_one_sieve << std::endl;
+		std::cout << "number of threads " << siever->number_of_threads << std::endl << std::flush;
+		std::cout << "chunk per thread " << siever->chunk_per_thread << std::endl << std::flush;
+		std::cout << "plus one sieve " << siever->plus_one_sieve << std::endl << std::flush;
 	}
 	
 	std::vector<int> get_primes_found()
@@ -105,7 +105,7 @@ public:
 
 	void print_number_of_found_primes()
 	{
-		std::cout << "The number of found primes: ";
+		std::cout << "The number of found primes: " << std::flush;
 	
 		int number_of_found_primes = 0;
 		prime_t chunk_base_temp = siever->chunk_base;
@@ -120,7 +120,7 @@ public:
 			chunk_base_temp += siever->chunk_bits;
 		}
 		
-		std::cout << number_of_found_primes << std::endl;
+		std::cout << number_of_found_primes << std::endl << std::flush;
 	}
 
 };
