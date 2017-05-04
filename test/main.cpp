@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	const std::vector<int> real_results = read_real_results();	
 
 	std::cout << "Generating testcases.....\n" << std::flush;
-	Testcase_generator generator(1024, 2048, 1, 128, 1, 16);
+	Testcase_generator generator(65536, 131072, 1, 128, 1, 16);
 	
 	std::cout << "Running tests.....\n" << std::flush;
 

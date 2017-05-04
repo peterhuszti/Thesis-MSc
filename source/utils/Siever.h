@@ -103,8 +103,9 @@ public:
 	
 		size_of_st = log_upper_bound < 7 ? 1 : P2I(1<<(log_upper_bound-LOG_WORD_SIZE));
 		nbits = last_number / 2 + 1;
-	
+
 		word_t chunk_temp = upper_bound - lower_bound;
+
 		number_of_chunks = in.max_number_of_chunks == 1 ? 1 : (chunk_temp / (1 << LOG_WORD_SIZE)) / 2;
 		while (number_of_chunks > in.max_number_of_chunks)
 		{
@@ -147,7 +148,7 @@ public:
 		{
 			ot[i] = new offset_t[nbits];
 		}
-		
+
 		number_of_circles = (nbits / chunk_bits) + 1;
 		/**
 			Allocate circles
@@ -258,6 +259,7 @@ public:
 							if (!last_chunk) // if we are at the last chunk than we can spare the calculation of offsets
 							{
 								update_offset(thread_id, prime_index, offset);
+								update_buckets(thread_id);
 							}
 						}
 					}
@@ -300,7 +302,6 @@ private:
 	
 	/**
 		Updates the offset table for the next chunk.
-		TODO: circles and buckets
 	*/
 	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
 	{
@@ -322,6 +323,8 @@ private:
 	
 	/**
 		Initializes the buckets.
+		It also updates the offsets, because from now on it makes no sense that an offset could be
+		larger than the size of a chunk.
 	*/
 	void init_buckets()
 	{
@@ -329,13 +332,12 @@ private:
 		{
 			for (size_t i=0; i<number_of_circles; ++i)
 			{
-				offset_t b = chunk_bits;
 				size_t p = 0;
 				for (size_t k=0; k<i+1; ++k)
 				{
-					for (; p < circles[i] && ot[j][k] < b; ++p) { }
+					for (; p < circles[i] && ot[j][k] < chunk_bits; ++p) { }
 					buckets[j][k] = p-1;
-					b += chunk_bits;
+					ot[j][k] -= chunk_bits;
 				}
 			}
 		}
@@ -344,7 +346,7 @@ private:
 	/**
 		Updates the buckets.
 	*/
-	void update_buckets()
+	void update_buckets(size_t thread_id)
 	{
 		
 	}
