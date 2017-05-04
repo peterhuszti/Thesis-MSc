@@ -8,6 +8,7 @@
 #include "../source/utils/Siever.h"
 #include "../source/utils/Printer.h"
 #include "../source/utils/utils.h"
+#include "../source/utils/testcase_generator.h"
 
 struct res
 {
@@ -18,39 +19,63 @@ struct res
 	res(std::vector<int> p, int l, int u): primes(p), low(l), up(u) { }
 };
 
-res start(std::string);
+res start(const Testcase&);
 std::vector<int> read_real_results();
-void compare(const std::vector<int>&, const res&);
+bool compare(const std::vector<int>&, const res&);
 
 int main(int argc, char *argv[])
 {
-	res my_results;
+	bool fail = false;
+
+	std::cout << "Reading primes.....\n" << std::flush;
 	const std::vector<int> real_results = read_real_results();	
 
+	std::cout << "Generating testcases.....\n" << std::flush;
+	Testcase_generator generator(1024, 2048, 1, 128, 1, 16);
+	
 	std::cout << "Running tests.....\n" << std::flush;
 
-	std::cout << "    config1.txt\n" << std::flush;
-	my_results = start("../source/utils/config1.txt");
-	compare(real_results, my_results);
-	std::cout << "    config2.txt\n" << std::flush;
-	my_results = start("../source/utils/config2.txt");
-	compare(real_results, my_results);
+	int number_of_tc = generator.getNumberOfTestcases();
+	for (int j=0; j<number_of_tc; ++j)
+	{
+		Testcase tc = generator.getTestcase(j);
+		std::cout << "    lower bound: " << tc.lower_bound;
+		std::cout << "    upper bound: " << tc.upper_bound;
+		std::cout << "    number of chunks: " << tc.chunks;
+		std::cout << "    number of threads: " << tc.threads << "\n" << std::flush;
+		
+		if(!compare(real_results, start(tc)))
+		{
+			fail = true;
+		}
+	}
+	
+	if(fail)
+	{
+		std::cout << "\n\n\n*** The tests failed! ***\n\n\n" << std::flush;
+	}
+	else
+	{
+		std::cout << "\n\n\n*** The tests passed! ***\n\n\n" << std::flush;
+	}
 	
 	return 0;
 }
 
-res start(std::string config)
+res start(const Testcase& tc)
 {
-	input in = read_config(config);
+	input in(tc.lower_bound, tc.upper_bound,
+			 tc.chunks, tc.threads);
 	
 	Siever siever(in);
 
 	siever.soe_init();
 	siever.soe_chunks();
 
-	Printer printer(&siever, "test_results.txt");
+	Printer printer(&siever, "");
 	printer.print_sieving_table();
 	printer.print_primes_found();
+	//printer.print_debug_info();
 	return res(printer.get_primes_found(), in.low, in.up);
 }
 
@@ -71,8 +96,14 @@ std::vector<int> read_real_results()
 	return real;
 }
 
-void compare(const std::vector<int> &real, const res &mine)
+bool compare(const std::vector<int> &real, const res &mine)
 {
+	if (mine.primes.size() == 0)
+	{
+		std::cout << "        ## NO RESULTS ##\n" << std::flush;
+		return false;
+	}
+
 	bool equal = true;	
 	
 	int j;
@@ -94,6 +125,8 @@ void compare(const std::vector<int> &real, const res &mine)
 	{
 		std::cout << "        ## FAILED ##\n" << std::flush;
 	}
+	
+	return equal;
 }
 
 
