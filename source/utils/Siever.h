@@ -30,8 +30,14 @@
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
 typedef uint16_t offset_t; // TODO: check the max size of this
-typedef prime_t bucket_t;
 typedef prime_t circle_t;
+typedef prime_t bucket_t;
+
+struct pair_t
+{
+	size_t prime_index;
+	offset_t offset;
+};
 
 struct input
 {
@@ -73,7 +79,7 @@ private:
 	int number_of_buckets;
 	
 	word_t* st; // sieving table
-	offset_t** ot; // offset table
+	pair_t** st_pairs;
 	word_t** chunks;
 	bucket_t** buckets;
 	circle_t* circles;
@@ -125,10 +131,25 @@ public:
 		plus_one_sieve = number_of_chunks - chunk_per_thread*number_of_threads;	
 	
 		/**
-			Allocate `st`.
+			Allocate st.
 		*/
 		st = new word_t[size_of_st];
 		for (size_t j=0; j<=size_of_st; ++j) st[j]=0;
+		
+		/**
+			Allocate st_pairs.
+		*/
+		st_pairs = new pair_t*[number_of_threads];
+		for (size_t j=0; j<=number_of_threads; ++j) 
+		{
+			st_pairs[j] = new pair_t[size_of_st];
+			for (int i=0; i<size_of_st; ++i)
+			{
+				st_pairs[j][i].prime_index = i;
+				st_pairs[j][i].offset = 0;
+			}
+		}
+		
 		/**
 			Initialization of chunks 
 		*/
@@ -137,16 +158,6 @@ public:
 		{
 			chunks[i] = new word_t[chunk_size];
 			for (size_t j=0; j<=chunk_size; ++j) chunks[i][j]=0;
-		}
-		
-		/**
-			Allocate offsets
-			Every thread needs its own offset table, because they will sieve different chunks.
-		*/
-		ot = new offset_t*[number_of_threads];
-		for (size_t i=0; i<number_of_threads; ++i)
-		{
-			ot[i] = new offset_t[nbits];
 		}
 
 		number_of_circles = (nbits / chunk_bits) + 1;
@@ -166,6 +177,7 @@ public:
 		for (size_t i=0; i<number_of_threads; ++i)
 		{
 			buckets[i] = new bucket_t[number_of_buckets];
+			for (size_t j=0; j<=number_of_buckets; ++j) buckets[i][j]=0;
 		}
 	}
 	
@@ -176,12 +188,11 @@ public:
 	{
 		for (size_t i=0; i<number_of_chunks; i++) delete[] chunks[i];
 		delete[] chunks;
-		for (size_t i=0; i<number_of_threads; i++) delete[] ot[i];
-		delete[] ot;
 		delete[] circles;
 		for (size_t i=0; i<number_of_threads; i++) delete[] buckets[i];
 		delete[] buckets;
 		delete[] st;
+		delete[] st_pairs;
 	}
 
 	/**
@@ -235,8 +246,7 @@ public:
 			}
 		}
 		
-		init_offsets(params);
-		init_buckets();
+		init_buckets(params);
 	
 		for (size_t thread_id=0; thread_id<number_of_threads; ++thread_id)
 		{
@@ -244,24 +254,39 @@ public:
 				for (size_t chunk_id=0; chunk_id<params[thread_id].chunk_per_thread; ++chunk_id) // iterate through the chunks
 				{
 					bool last_chunk = (chunk_id == params[thread_id].chunk_per_thread - 1);
-					for(size_t prime_index=1; prime_index<this->nbits; ++prime_index) // start from 1 if 1 is in primes
+					for (size_t circle_id = 0; circle_id < number_of_circles; ++ circle_id) // iterate through circles
 					{
-						if (!GET( this->st, prime_index )) // if it's a prime, then we sieve
+						std::pair<bucket_t,bucket_t> actual_bucket = getActualBucket(thread_id);
+						bool broken_bucket = actual_bucket.first > actual_bucket.second;
+						size_t broken_end = broken_bucket ? nbits : actual_bucket.second;
+						
+						for (size_t index=actual_bucket.first; index < broken_end; ++index) // start from 1 if 1 is in primes
 						{
-							prime_t p = I2P(prime_index); // the prime in dec
-							prime_t offset = this->ot[thread_id][prime_index]; // get the offset of the current prime in the actual chunk
+							if (!GET( this->st, this->st_pairs[thread_id][index].prime_index )) // if it's a prime, then we sieve
+	// if prime && in the actual bucket -> sieve
+							{
+								prime_t p = I2P(this->st_pairs[thread_id][index].prime_index); // the prime in dec
+								prime_t offset = this->st_pairs[thread_id][index].offset; // get the offset of the current prime in the actual chunk
 
-							while (offset < this->chunk_bits) // while we are in the chunk
-							{
-								SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
-								offset += p; // next multiplier
-							}
-							if (!last_chunk) // if we are at the last chunk than we can spare the calculation of offsets
-							{
-								update_offset(thread_id, prime_index, offset);
-								update_buckets(thread_id);
+								while (offset < this->chunk_bits) // while we are in the chunk
+								{
+									SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
+									offset += p; // next multiplier
+								}
+								if (!last_chunk) // if we are at the last chunk than we can spare the calculation of offsets
+								{
+									update_offset(thread_id, index, offset);
+								}
 							}
 						}
+						if (broken_bucket) 
+						{
+	
+						}
+					}
+					if (!last_chunk)
+					{
+						update_buckets(thread_id);
 					}
 				}
 			}));
@@ -294,7 +319,7 @@ private:
 					prime_t p = I2P(i); // the prime in dec
 					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
 
-					ot[j][i] = negmodp2I(q, p); // calculate offset in the actual chunk
+					st_pairs[j][i].offset = negmodp2I(q, p); // calculate offset in the actual chunk
 				}
 			}
 		}
@@ -303,9 +328,9 @@ private:
 	/**
 		Updates the offset table for the next chunk.
 	*/
-	void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
+	inline void update_offset(size_t thread_id, size_t prime_index, prime_t last_offset)
 	{
-		ot[thread_id][prime_index] = last_offset - chunk_bits;
+		st_pairs[thread_id][prime_index].offset = last_offset - chunk_bits;
 	}
 	
 	/**
@@ -326,21 +351,39 @@ private:
 		It also updates the offsets, because from now on it makes no sense that an offset could be
 		larger than the size of a chunk.
 	*/
-	void init_buckets()
+	void init_buckets(const std::vector<Params_for_threads> &params)
 	{
+		init_offsets(params);
+	
 		for (size_t j=0; j<number_of_threads; ++j) // for all threads
 		{
-			for (size_t i=0; i<number_of_circles; ++i)
+			size_t p = 0;
+			for (size_t circle_id=0; circle_id<number_of_circles; ++circle_id)
 			{
-				size_t p = 0;
-				for (size_t k=0; k<i+1; ++k)
+				word_t temp = chunk_bits;
+				for (size_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
 				{
-					for (; p < circles[i] && ot[j][k] < chunk_bits; ++p) { }
-					buckets[j][k] = p-1;
-					ot[j][k] -= chunk_bits;
+					for (; p < circles[circle_id] && st_pairs[j][p].offset < temp; ++p) { }
+					buckets[j][bucket_id] = p;
+					if (bucket_id != 0)
+					{
+						for (size_t i=buckets[j][bucket_id-1]; i<buckets[j][bucket_id]; ++i)
+						{
+							st_pairs[j][p].offset -= chunk_bits;
+						}
+					}
 				}
+				temp += chunk_bits;
 			}
 		}
+	}
+	
+	/**
+		Returns the actual sieving bucket.
+	*/
+	std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id)
+	{
+	
 	}
 	
 	/**
