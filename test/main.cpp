@@ -31,7 +31,8 @@ int main(int argc, char *argv[])
 	const std::vector<int> real_results = read_real_results();	
 
 	std::cout << "Generating testcases.....\n" << std::flush;
-	Testcase_generator generator(65536, 131072, 1, 128, 1, 16);
+//	Testcase_generator generator(65536, 131072, 1, 128, 1, 16);
+	Testcase_generator generator(65536, 131072, 256, 256, 8, 8);
 	
 	std::cout << "Running tests.....\n" << std::flush;
 
@@ -72,10 +73,10 @@ res start(const Testcase& tc)
 	siever.soe_init();
 	siever.soe_chunks();
 
-	Printer printer(&siever, "");
+	Printer printer(&siever, "../test/result.txt");
 	printer.print_sieving_table();
 	printer.print_primes_found();
-	//printer.print_debug_info();
+	printer.print_debug_info();
 	return res(printer.get_primes_found(), in.low, in.up);
 }
 

@@ -258,15 +258,15 @@ public:
 						std::pair<bucket_t,bucket_t> actual_bucket = getActualBucket(thread_id);
 						bool broken_bucket = actual_bucket.first >= actual_bucket.second;
 						size_t broken_end = broken_bucket ? nbits : actual_bucket.second;
-
+//std::cout << actual_bucket.first << "   " << actual_bucket.first << std::endl << std::flush;
 						for (size_t index=actual_bucket.first; index < broken_end; ++index) // start from 1 if 1 is in primes
 						{
 							if (!GET( this->st, this->st_pairs[thread_id][index].prime_index )) // if it's a prime, then we sieve
 							{					
 								prime_t p = I2P(this->st_pairs[thread_id][index].prime_index); // the prime in dec
-								std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
+							//	std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
 								prime_t offset = this->st_pairs[thread_id][index].offset; // get the offset of the current prime in the actual chunk
-								std::cout << "OFFSET:  " << offset << std::endl << std::flush;
+						//		std::cout << "OFFSET:  " << offset << std::endl << std::flush;
 								while (offset < this->chunk_bits) // while we are in the chunk
 								{								
 									SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
@@ -281,6 +281,7 @@ public:
 						}
 						if (broken_bucket) 
 						{
+							std::cout << "BROKEN" << std::flush;
 								// from 0 to actual_bucket.second
 						}
 					}
@@ -318,7 +319,7 @@ private:
 				{
 					prime_t p = I2P(i); // the prime in dec
 					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
-std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
+//std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 					st_pairs[j][i-1].offset = negmodp2I(q, p); // calculate offset in the actual chunk
 				}
 			}
@@ -386,7 +387,7 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 	/**
 		Returns the actual sieving bucket.
 	*/
-	std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id)
+	inline std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id)
 	{
 		return std::pair<bucket_t,bucket_t> (buckets[thread_id][0], buckets[thread_id][1]);
 	}
@@ -420,7 +421,10 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 
 
 
-
+TODO: 
+	initnel figyelni arra, hogy kapasbol lehet broken is
+	update: alulrol elindulok, amik maradnak ujra szitalashoz, azok mennek a bucket vegere, kovi bucket elejet lejjebb hozom, aztan a bucketeket korbeforgatom.
+	
 
 
 
