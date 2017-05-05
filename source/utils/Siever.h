@@ -140,12 +140,12 @@ public:
 			Allocate st_pairs.
 		*/
 		st_pairs = new pair_t*[number_of_threads];
-		for (size_t j=0; j<=number_of_threads; ++j) 
+		for (size_t j=0; j<number_of_threads; ++j) 
 		{
-			st_pairs[j] = new pair_t[size_of_st];
-			for (int i=0; i<size_of_st; ++i)
+			st_pairs[j] = new pair_t[nbits];
+			for (int i=0; i<nbits; ++i)
 			{
-				st_pairs[j][i].prime_index = i;
+				st_pairs[j][i].prime_index = i+1;
 				st_pairs[j][i].offset = 0;
 			}
 		}
@@ -212,7 +212,6 @@ public:
 
 			while (i < nbits) // sieve until it is in st
 			{
-				
 				SET(st,i); // mark as composite
 				i += p; // step forward p
 			}
@@ -247,41 +246,42 @@ public:
 		}
 		
 		init_buckets(params);
-	
+		
 		for (size_t thread_id=0; thread_id<number_of_threads; ++thread_id)
 		{
 			threads.push_back( std::thread( [this, thread_id, &params] {
 				for (size_t chunk_id=0; chunk_id<params[thread_id].chunk_per_thread; ++chunk_id) // iterate through the chunks
 				{
 					bool last_chunk = (chunk_id == params[thread_id].chunk_per_thread - 1);
-					for (size_t circle_id = 0; circle_id < number_of_circles; ++ circle_id) // iterate through circles
+					for (size_t circle_id = 0; circle_id < number_of_circles; ++circle_id) // iterate through circles
 					{
 						std::pair<bucket_t,bucket_t> actual_bucket = getActualBucket(thread_id);
-						bool broken_bucket = actual_bucket.first > actual_bucket.second;
+						bool broken_bucket = actual_bucket.first >= actual_bucket.second;
 						size_t broken_end = broken_bucket ? nbits : actual_bucket.second;
-						
+
 						for (size_t index=actual_bucket.first; index < broken_end; ++index) // start from 1 if 1 is in primes
 						{
 							if (!GET( this->st, this->st_pairs[thread_id][index].prime_index )) // if it's a prime, then we sieve
-	// if prime && in the actual bucket -> sieve
-							{
+							{					
 								prime_t p = I2P(this->st_pairs[thread_id][index].prime_index); // the prime in dec
+								std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
 								prime_t offset = this->st_pairs[thread_id][index].offset; // get the offset of the current prime in the actual chunk
-
+								std::cout << "OFFSET:  " << offset << std::endl << std::flush;
 								while (offset < this->chunk_bits) // while we are in the chunk
-								{
+								{								
 									SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
+									
 									offset += p; // next multiplier
 								}
 								if (!last_chunk) // if we are at the last chunk than we can spare the calculation of offsets
 								{
 									update_offset(thread_id, index, offset);
 								}
-							}
+							}							
 						}
 						if (broken_bucket) 
 						{
-	
+								// from 0 to actual_bucket.second
 						}
 					}
 					if (!last_chunk)
@@ -312,14 +312,14 @@ private:
 	{
 		for (size_t j=0; j<number_of_threads; ++j) // for all threads
 		{
-			for (size_t i=1; i<nbits; ++i) // start from 1 if 1 is in primes
+			for (size_t i=1; i<=nbits; ++i) // start from 1 if 1 is in primes
 			{	
 				if (!GET( st, i )) // if it's a prime, then we calculate offset
 				{
 					prime_t p = I2P(i); // the prime in dec
 					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
-
-					st_pairs[j][i].offset = negmodp2I(q, p); // calculate offset in the actual chunk
+std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
+					st_pairs[j][i-1].offset = negmodp2I(q, p); // calculate offset in the actual chunk
 				}
 			}
 		}
@@ -360,9 +360,10 @@ private:
 			size_t p = 0;
 			for (size_t circle_id=0; circle_id<number_of_circles; ++circle_id)
 			{
-				word_t temp = chunk_bits;
-				for (size_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
+				buckets[j][0] = 0;
+				for (size_t bucket_id=1; bucket_id<circle_id; ++bucket_id)
 				{
+					word_t temp = chunk_bits;
 					for (; p < circles[circle_id] && st_pairs[j][p].offset < temp; ++p) { }
 					buckets[j][bucket_id] = p;
 					if (bucket_id != 0)
@@ -372,8 +373,12 @@ private:
 							st_pairs[j][p].offset -= chunk_bits;
 						}
 					}
+					temp += chunk_bits;
 				}
-				temp += chunk_bits;
+				if (circle_id > 0)
+				{
+					buckets[j][circle_id] = nbits; // BROKEN??
+				}
 			}
 		}
 	}
@@ -383,7 +388,7 @@ private:
 	*/
 	std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id)
 	{
-	
+		return std::pair<bucket_t,bucket_t> (buckets[thread_id][0], buckets[thread_id][1]);
 	}
 	
 	/**
