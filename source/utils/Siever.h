@@ -255,18 +255,37 @@ public:
 					bool last_chunk = (chunk_id == params[thread_id].chunk_per_thread - 1);
 					for (size_t circle_id = 0; circle_id < number_of_circles; ++circle_id) // iterate through circles
 					{
-						std::pair<bucket_t,bucket_t> actual_bucket = getActualBucket(thread_id);
-						bool broken_bucket = actual_bucket.first >= actual_bucket.second;
-						size_t broken_end = broken_bucket ? nbits : actual_bucket.second;
-//std::cout << actual_bucket.first << "   " << actual_bucket.first << std::endl << std::flush;
-						for (size_t index=actual_bucket.first; index < broken_end; ++index) // start from 1 if 1 is in primes
+						std::cout << "CIRCLE:   " << this->circles[circle_id] << std::endl << std::flush;
+						std::pair<bucket_t,bucket_t> actual_bucket = getActualBucket(thread_id, circle_id);
+						bool broken_bucket = actual_bucket.first > actual_bucket.second;
+						size_t start, end;
+
+						if (circle_id == 0)
+						{
+							start = 0;
+							end = nbits;	
+						}
+						else
+						{
+							if (broken_bucket) // if the bucket is broken, then we start sieving the top of the circle
+							{
+								start = actual_bucket.second;
+								end = this->circles[circle_id];
+							}
+							{
+								start = actual_bucket.first;
+								end = actual_bucket.second;
+							}					
+						}
+std::cout << start << "   " << end << std::endl << std::flush;
+						for (size_t index=start; index < end; ++index) // start from 1 if 1 is in primes
 						{
 							if (!GET( this->st, this->st_pairs[thread_id][index].prime_index )) // if it's a prime, then we sieve
 							{					
 								prime_t p = I2P(this->st_pairs[thread_id][index].prime_index); // the prime in dec
-							//	std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
+								std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
 								prime_t offset = this->st_pairs[thread_id][index].offset; // get the offset of the current prime in the actual chunk
-						//		std::cout << "OFFSET:  " << offset << std::endl << std::flush;
+								std::cout << "OFFSET:  " << offset << std::endl << std::flush;
 								while (offset < this->chunk_bits) // while we are in the chunk
 								{								
 									SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
@@ -279,9 +298,9 @@ public:
 								}
 							}							
 						}
-						if (broken_bucket) 
+						if (broken_bucket) // we must sieve the bottom of the circle as well
 						{
-							std::cout << "BROKEN" << std::flush;
+							std::cout << "    ***   BROKEN" << std::endl << std::flush;
 								// from 0 to actual_bucket.second
 						}
 					}
@@ -319,7 +338,7 @@ private:
 				{
 					prime_t p = I2P(i); // the prime in dec
 					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
-//std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
+std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 					st_pairs[j][i-1].offset = negmodp2I(q, p); // calculate offset in the actual chunk
 				}
 			}
@@ -339,11 +358,11 @@ private:
 	*/
 	void init_circles()
 	{
-		word_t temp = chunk_bits;
+		word_t temp = chunk_size;
 		for (size_t i=0; i<number_of_circles; ++i)
 		{
 			circles[i] = MAX(temp, nbits);
-			temp += chunk_bits;
+			temp += chunk_size;
 		}
 	}
 	
@@ -358,38 +377,52 @@ private:
 	
 		for (size_t j=0; j<number_of_threads; ++j) // for all threads
 		{
+			buckets[j][0] = circles[0];
+		
 			size_t p = 0;
-			for (size_t circle_id=0; circle_id<number_of_circles; ++circle_id)
+			size_t b = 1;
+			for (size_t circle_id=1; circle_id<number_of_circles; ++circle_id)
 			{
-				buckets[j][0] = 0;
-				for (size_t bucket_id=1; bucket_id<circle_id; ++bucket_id)
+				word_t temp = chunk_bits;
+				for (size_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
 				{
-					word_t temp = chunk_bits;
 					for (; p < circles[circle_id] && st_pairs[j][p].offset < temp; ++p) { }
-					buckets[j][bucket_id] = p;
+					buckets[j][b++] = p-1;
 					if (bucket_id != 0)
 					{
-						for (size_t i=buckets[j][bucket_id-1]; i<buckets[j][bucket_id]; ++i)
+						for (size_t i=buckets[j][b-1]+1; i<=buckets[j][b]; ++i)
 						{
-							st_pairs[j][p].offset -= chunk_bits;
+							st_pairs[j][i].offset -= chunk_bits;
 						}
 					}
 					temp += chunk_bits;
 				}
-				if (circle_id > 0)
-				{
-					buckets[j][circle_id] = nbits; // BROKEN??
-				}
-			}
+			}		
+			for (int i=0;i<number_of_buckets;i++)
+			{ std::cout << " BUCKETS: " << buckets[j][i] << std::endl;}
 		}
 	}
 	
 	/**
 		Returns the actual sieving bucket.
 	*/
-	inline std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id)
+	std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id, size_t circle_id)
 	{
-		return std::pair<bucket_t,bucket_t> (buckets[thread_id][0], buckets[thread_id][1]);
+		bool found = false;
+		size_t index = 0;
+		while (!found && index<number_of_buckets)
+		{
+			if (buckets[thread_id][index] > circles[circle_id])
+			{
+				found = true;
+			}
+			index++;
+		}
+		bucket_t end = buckets[thread_id][index];
+		bucket_t last_bucket_in_circle = buckets[thread_id][buckets[thread_id][circle_id*(circle_id+1)/2+circle_id]];
+		bucket_t start = end > last_bucket_in_circle ? last_bucket_in_circle : circle_id-1;
+		
+		return std::pair<bucket_t,bucket_t> (start, end);
 	}
 	
 	/**
@@ -397,7 +430,9 @@ private:
 	*/
 	void update_buckets(size_t thread_id)
 	{
-		
+		// vegig megyek a circleken
+		// veszem az act [0-1] bucketet
+		// elindulok az aljarol, ha offset < chunk_bits -> at kell tenni kovi bucketbe
 	}
 	
 	/**
@@ -419,12 +454,11 @@ private:
 
 
 
-
+/*
 
 TODO: 
-	initnel figyelni arra, hogy kapasbol lehet broken is
-	update: alulrol elindulok, amik maradnak ujra szitalashoz, azok mennek a bucket vegere, kovi bucket elejet lejjebb hozom, aztan a bucketeket korbeforgatom.
-	
-
+	update: alulrol elindulok, amik maradnak ujra szitalashoz, azok mennek a bucket vegere, 
+	kovi bucket elejet lejjebb hozom, aztan a bucketeket korbeforgatom.
+*/
 
 

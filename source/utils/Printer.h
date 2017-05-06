@@ -54,7 +54,7 @@ public:
 		std::cout << "plus one sieve " << siever->plus_one_sieve << "\n\n" << std::flush;
 		
 		std::cout << "number of circles " << siever->number_of_circles << std::endl << std::flush;
-		std::cout << "number of buckets " << siever->number_of_buckets << std::endl << std::flush;
+		std::cout << "number of buckets " << siever->number_of_buckets << "\n\n" << std::flush;
 	}
 	
 	std::vector<int> get_primes_found()

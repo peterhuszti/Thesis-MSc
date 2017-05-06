@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
 
 	std::cout << "Generating testcases.....\n" << std::flush;
 //	Testcase_generator generator(65536, 131072, 1, 128, 1, 16);
-	Testcase_generator generator(65536, 131072, 256, 256, 8, 8);
+	Testcase_generator generator(1024, 2048, 128, 128, 1, 1);
+	//Testcase_generator generator(65536, 131072, 512, 512, 8, 8);
 	
 	std::cout << "Running tests.....\n" << std::flush;
 
