@@ -380,7 +380,7 @@ private:
 	
 		for (size_t j=0; j<number_of_threads; ++j) // for all threads
 		{
-			buckets[j][0] = circles[0];
+			buckets[j][0] = circles[0]; // the first bucket is equals to the first circle everytime
 		
 			size_t p = 0;
 			size_t b = 1;
@@ -390,12 +390,15 @@ private:
 				for (bucket_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
 				{
 					for (; p < circles[circle_id] && st_pairs[j][p].offset < temp; ++p) { }
+					// iterate through the primes until either we reach the end of the current circle,
+					// or the offset indicates that we won't sieve into the next bucket
 					buckets[j][b++] = p-1;
 					if (bucket_id != 0)
 					{
 						for (size_t i=buckets[j][b-1]+1; i<=buckets[j][b]; ++i)
 						{
-							st_pairs[j][i].offset -= chunk_bits;
+							st_pairs[j][i].offset -= chunk_bits; 
+							// reset the offsets so we can roll the circles easier
 						}
 					}
 					temp += chunk_bits;
@@ -443,6 +446,7 @@ private:
 			bucket_t end = actual_bucket.second;
 			while (!stay && index <= end)
 			{
+				// find the primes that will need to move to the former bucket
 				stay = st_pairs[thread_id][index].offset < chunk_bits;
 				index++;
 			}
@@ -453,6 +457,8 @@ private:
 			bucket_t temp = buckets[thread_id][last_bucket_in_circle];
 			for (bucket_t bucket_id=last_bucket_in_circle; bucket_id>first_bucket_in_circle+1; --bucket_id)
 			{
+				// roll the circle, it means that in any given circle the 1st and 
+				// 2nd ([0] and [1]) pointers give us the acutal bucket
 				buckets[thread_id][bucket_id] = buckets[thread_id][bucket_id-1];
 			}
 			buckets[thread_id][first_bucket_in_circle+1] = temp;
