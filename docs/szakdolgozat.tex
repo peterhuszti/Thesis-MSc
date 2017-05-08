@@ -60,7 +60,12 @@ Az algoritumus: \par
 \begin{enumerate}
 \item Készítünk egy listát a kisebb prímekről, amelyekkel majd ki fogjuk szitálni a vizsgált intervallumot. Ezt a listát magát is el lehet készíteni egy kisebb Erathosztenészi szitával. \par
 De mit is jelent az, hogy kis prímek? Jelöljük az intervallumunkat, ahol keressük a prímeket \( [a, b] \)-vel. A első ötlet természetesen, hogy vizsgálunk minden 1-nél nagyobb de \(b\)-nél kisebb prímszámot. De kicsit jobban belegondolva erre egyáltalán nincs szükség. \par 
-TODO: insert ábra. \par
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{img/erat.png}
+\caption{}
+\end{figure}
+
 Elég $\sqrt{b}$-ig felmennünk a szitatábla felső korlátjával. Ahhoz, hogy ezt belássuk, vegyük észre, hogy minden a szitatáblában lévő, prímmel csak annak négyzetétől kell kezdenünk szitálni. \par 
 Jelöljük a szitatáblát [x,y]-nal. Ekkor legyen $x < z < y$. Ekkorra már kiszitáltunk minden x és z közé eső prímmel. Vagyis azok a számok, amelyek oszthatóak valamely $z$-nél kisebb prímmel, már ki vannak szitálva. Vagyis az első olyan szám, amit vizsgálnunk kell, az a $z^2$. \par
 Ebből már jól látszódik, egrészt az, hogy a fenti jelölést használva $y=\sqrt{b}$, másrészt ahogy haladunk előre a szitálóprímekkel, a vizsgált intervallum egyre kisebb lesz. Ez az egyszerűsítés rengeteget javít a program teljesítményén. Tfh. hogy $[x,y]=[10^6,4\cdot10^6]$. Ekkor a naív $4\cdot10^6$ szitatábla méret helyett elég mindössze $\sqrt{4\cdot10^6}=2000$ méretű tábla.
@@ -68,7 +73,13 @@ Ebből már jól látszódik, egrészt az, hogy a fenti jelölést használva $y
 \item Jelöljük meg \textit{p} összes többszörösét a vizsgált intervallumban, kedzve $p^2$-től, ha $a<p^2 $. \label{szita}
 \item Legyen \textit{p} a szitatábla következő eleme, a következő szitáló prím. Ha nincs ilyen akkor vége az algoritmusnak. Ha van ilyen, akkor folytassuk a \ref{szita}. ponttal.
 \end{enumerate}
-TODO: insert stuki \par
+
+\begin{figure}[h]
+\centering
+\includegraphics{img/erat_stuki.png}
+\caption{Erathosztenészi-szita}
+\end{figure}
+
 \bigskip
 Az iteráció végén a jelöletlenül maradt számok lesznek a keresett prím számok. Ha egy ilyen szám összetett lenne, akkor már biztosan meg lett volna jelölve, hiszen a számelmélet alaptétele szerint felírható kisebb prímszámok szorzataként, vagyis egy kisebb prímszámnak a többszöröse, amikkel pedig már szitáltunk.
  \subsubsection{Hátrányok} \label{badbad}
@@ -92,17 +103,34 @@ Viszont kisebb, de már elég nagy példákon kísérletezve be lehet lőni azt,
 \item Legyen \textit{p} a szitatáblából a következő szitáló prím. Ha nincs ilyen, akkor kész vagyunk az aktuális szegmens kiszitálásával, vagyis már akár ebből a szegmensből ki is lehetne olvasni a benne lévő prím számokat. Ekkor olvassuk be a következő szegmenst, és folytassuk a \ref{chunkszita}-es ponttal. \par
 Ha viszont nincs több szegmens, akkor készen vagyunk, vége az algoritmusnak. 
 \end{enumerate}
-TODO: insert stuki \par
-Amint később látni fogjuk, csak ezzel a módosítással volt, hogy több mint 3-szoros sebesség csökkenést lehetett elérni. Lásd: \ref{benchmark}
-\subsection{COLS}
+
+\begin{figure}[h]
+\centering
+\includegraphics{img/chunk_stuki.png}
+\caption{Szegmensenkéni szitálás}
+\end{figure}
+
+Amint később látni fogjuk, csak ezzel a módosítással volt, hogy több mint 3-szoros sebesség növekedést lehetett elérni. Lásd: \ref{benchmark}
+\subsection{COLS} \label{cols}
 
 \clearpage
 \section{Felhasználói dokumentáció}
 
 \subsection{A program használata} \label{usage}
 
-A program a \textbf{result/} mappába fogja elhelyezni a kiszámolt prímeket a result.txt fájlba, ha mást nem adtunk meg.\par
-TODO: insert ábra
+A programot a \textbf{/source/soe.exe} binálris indításával tudjuk futtatni. Ha mást nem adtunk meg, akkor bemenetként a \textit{/source/utils/config1.txt/} fájlt fogja felhasználni. Ha véget ért a futás, akkor a program a \textbf{/result/} mappába fogja elhelyezni a kiszámolt prímeket a \textit{result.txt} fájlba, ha mást nem adtunk meg.\par \bigskip
+Lehetőségünk van azonban befoláysolni a program futását konfigurációs fájlokkal. Ezeket a \textit{/source/utils/} mappába kell létrehozni, és a következő sémát kell követniük:
+\begin{itemize}
+\item lower bound: a
+\item upper bound: b
+\item max number of chunks: c
+\item number of threads: t
+\end{itemize}
+Ahol \([a,b]\) a kiszitálni kívánt intervallum, \textit{c} a szegmensek maximális száma (ezt bizonyos esetekben csökkentheti a program, lásd: \ref{program}) és t a használt szálak száma. \par
+\bigskip
+Tehát amennyiben szeretnénk a saját konfigurációs fájlunkat használni, azt a programnak bementi paraméterként kell megadnunk. Hasonlóan azt is, ha a kimeneti féjlt szeretnénk megváltoztatni. \par \bigskip
+soe.exe [config] [result] \par
+Például: soe.exe myConfig.txt myResult.txt
 
 \subsection{Rendszerkövetelmények}
 
@@ -135,21 +163,140 @@ A benchmark elkészítéséhez a Benchpress nevű frameworköt használtam. Ez e
 Ahhoz, hogy le tudjuk újra fordítani a programot, ahhoz egy C++11 kompatibilis fordítóra van szükség. A program eredetileg a g++ 5.2.0-ás verziójával lett lefordítva, de semmi akadálya annak, hogy más megfelelő fordítóprogramot használjunk. \par
 Ha viszont g++-t használunk, akkor a következő javasolt g++ [-o sieve] -O3 -std=c++11 main.cpp. Az -o kapcsoló nem szükséges, ezzel csupán az elkészített futtatható fájl nevét tudjuk megadni. Az -std=c++11 paraméterrel tudjuk megadni, hogy a fordító a C++11-es szabvány szerint próbálja meg lefordítani a programot. Az -O3 paraméter egy optimalizációs paraméter. Ezekről bővebben lásd: \ref{optpar}
 
-\subsection{A program felépítése}
+\subsection{A program felépítése} \label{program}
 
+A program belépési pontja a \textbf{/source/main.cpp}. Az összes többi forrásfájl a \textbf{/source/utils/} mappában található. \par \bigskip
+Az \textbf{utils.h} fájl tartalmazza a konfigurációs fájlok beolvasását, valamint a program futását vezérlő \textit{start()} metódust. \par \bigskip
+A \textbf{Printer.h} féjlban található \textit{Printer} osztály segítségével tudunk kiíratni minden adatot a program futásáról, valamint ez az osztály készíti el a megoldás fájlt is. Fontos volt külön kezelni ezt magától a konkrét számolástól, mert nem tartozik szorosan a feladat megoldásához, így logikailag is külön egységet alkotnak. A \textit{Printer} osztály a később említett \textit{Siever} osztály ún. barát osztálya, ami azt jelenti, hogy minden privát adattagját el tudja érni. \par \bigskip
+Végül, de nem utolsó sorban itt található még a \textbf{Siever.h} fájl, benne a \textit{Siever} osztállyal, ami az összes számítás elvégzéséért felelős. \par
+
+A továbbiakban részletesebben ismertetve lesznek ezen osztály adattagjai és metódusai.
+\begin{itemize}
+\item \textit{last\_number}: a fenti jelölések szerint $y=\sqrt{b}$, vagyis a szitatábla utolsó száma. \par Ehhez kapcsolódik a \textit{log\_upper\_bound} adattag is, amire igaz, hogy: 
+\( 2^{log\_upper\_bound}-1=last\_number \)
+\item \textit{size\_of\_st}: a szitatábla mérete gépi szavakban. Viszont a szitatábla a legritkább esetben lesz csak pont a gépi szó méretének egész számú többzöröse, ezért szükségünk van arra is, hogy pontosabban, bitekben mérve mekkora helyet foglal a tábla, erre szolgál az \textit{nbits} adattag.
+\item Hasonlóan a két fentebb említetthez van létrehozva a \textit{chunk\_size} és a \textit{chunk\_bits} adattag, amik a szegmensek méretére vonatkoznak.
+\item \textit{chunk\_base}: az első vizsgált szám pozíciója
+\item \textit{chunk\_per\_thread}, \textit{plus\_one\_sieve}, az előbbi változó tárolja azt, hogy egy szálnak hány szegmenst kell kiszitálnia, míg utóbbi azt, hogy ha a szegmensek száma nem osztható a szálak számával, akkor hány threadnek kell még plusz egy szegmenst kisztiálnia.
+\item \textit{number\_of\_circles}, \textit{number\_of\_bucket}: a körök illetve az edények száma.
+\bigskip\bigskip\bigskip
+\item A \textit{soe\_init()} metódus fogja elkészíteni a szitatáblát, vagyis 3-tól \textit{nbits}-ig meg fogja keresni az összetett számokat, és ezekhez a számokhoz tartozó biteket bebillenti 1-re. Szóval később azokkal a számokkal, vagy bitekkel kell szitálni majd, amik 0-k.
+\begin{lstlisting}
+	void soe_init()
+	{
+		prime_t p = 3; // first prime
+		prime_t q = P2I(p); // index in st
+
+		while (p * p < I2P(nbits)) // need to sieve only until sqrt(upper_bound)
+		{
+			while (GET(st,q)) q++; // search the next 0 in st, i.e. the next prime to sieve with
+
+			p = I2P(q); // what is this next sieving prime
+			prime_t i = P2I(p*p); // need to sieve only from p^2 because the smallers are already sieved
+
+			while (i < nbits) // sieve until it is in st
+			{
+				SET(st,i); // mark as composite
+				i += p; // step forward p
+			}
+			q++; // step forward 1, so the 2. while can find the next prime to sieve with
+		}
+	} 
+\end{lstlisting}
+\item Az \textit{init\_offsets}, \textit{init\_buckets} és a \textit{init\_circles} metódusok a probléma inicializálására szolgálnak. Lásd: \ref{cols}
+\begin{lstlisting}
+	void init_buckets(const std::vector<Params_for_threads> &params)
+	{
+		init_offsets(params);
+	
+		for (size_t j=0; j<number_of_threads; ++j) // for all threads
+		{
+			buckets[j][0] = circles[0];
+		
+			size_t p = 0;
+			size_t b = 1;
+			for (circle_t circle_id=1; circle_id<number_of_circles; ++circle_id)
+			{
+				word_t temp = chunk_bits;
+				for (bucket_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
+				{
+					for (; p < circles[circle_id] && st_pairs[j][p].offset < temp; ++p) { }
+					buckets[j][b++] = p-1;
+					if (bucket_id != 0)
+					{
+						for (size_t i=buckets[j][b-1]+1; i<=buckets[j][b]; ++i)
+						{
+							st_pairs[j][i].offset -= chunk_bits;
+						}
+					}
+					temp += chunk_bits;
+				}
+			}		
+		}
+	}
+\end{lstlisting}
+\item Az \textit{update\_offsets} és az \textit{update\_buckets} metódusok minden edénnyel való szitálás után újrarendezik az edényeket, lásd \ref{cols}
+\begin{lstlisting}
+	void update_buckets(size_t thread_id)
+	{
+		for (circle_t circle_id=0; circle_id<number_of_circles; ++circle_id)
+		{
+			auto actual_bucket = get_actual_bucket(thread_id, circle_id);
+			bool stay = false;
+			bucket_t index = actual_bucket.first;
+			bucket_t end = actual_bucket.second;
+			while (!stay && index <= end)
+			{
+				stay = st_pairs[thread_id][index].offset < chunk_bits;
+				index++;
+			}
+			bucket_t first_bucket_in_circle = circle_id*(circle_id+1)/2;
+			buckets[thread_id][first_bucket_in_circle] = index-1;
+			
+			bucket_t last_bucket_in_circle = first_bucket_in_circle + circle_id;
+			bucket_t temp = buckets[thread_id][last_bucket_in_circle];
+			for (bucket_t bucket_id=last_bucket_in_circle; bucket_id>first_bucket_in_circle+1; --bucket_id)
+			{
+				buckets[thread_id][bucket_id] = buckets[thread_id][bucket_id-1];
+			}
+			buckets[thread_id][first_bucket_in_circle+1] = temp;
+		}	
+	}
+\end{lstlisting}
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics{img/siever.png}
+\caption{Siever osztály}
+\end{figure}
+
+\clearpage
 \subsection{Adatszerkezetek}
 
-\subsubsection{Szitatábla}
-\subsubsection{Szegmensek}
+\subsubsection{Szitatábla, szegmensek}
+
+A szitatáblával, valamint a vizsgált intervallummal nem lenne hatékony a számítás, ha egy az egyben eltárolnánk a számokat. Mint ahogy korábban is volt róla szó, nagyon fontos, hogy a memória olvasások számát redukáljuk. Ebből kifolyólag egy számot egy bittel fogunk reprezentálni, és egy adott számot a pozíciója alapján fogunk beazonosítani. Ennek eléréséhez vannak definiálva a következő preprocesszor makrók: INDEX, MASK, GET, SET, RESET, P2I, I2P, valamint a LOG\_WORD\_SIZE, ami az egy gépi szót határozza meg, vagyis \par
+\( gepi\_szo = 2^{LOG\_WORD\_SIZE} \). Fontos észrevenni még, hogy a páros számokat nem muszáj tárolni. Könnyedén figyelembe lehet venni a bitek maszkolásánál ezt, és így még megfeleztük a tárolt számok összméretét- \par
+Így például egy 64 bites rendszeren az eltárolt számok 1/128-ednyi memóriát fognak foglalni. \par
+Éppen ezért ezek táblák pointerekként vannak definiálva, amivel meg van határozva a legelső elemük. Innentől kezdve már csak azt kell kiszámolni, hogy az aktuális szám hanyadik a táblában, vagyis hány bit távolságra van a kezdőponthoz képest. \par
+\bigskip
+A szegmensek a szitatáblához hasonlóan vannak ábrázolva és eltárolva, minden számot egy bit reprezentál. Tárolva van a legelső szegmens első száma, valamint az, hogy hány bitből áll egy adott szegmens, így könnyedén ki lehet számolni a szegmensek határait.
+
 \subsubsection{Körök és edények}
 
-\subsection{Párhuzamos megvalósítás}
+A körök és az edények alkotják a COLS algoritmus lényegét. Ezek egyszerű mutatóként vannak reprezentálva, amik megadják, hogy a szitatáblában az adott körök és edények meddig tartanak, vagyis mi az utolsó elemük. \par
+Amíg körök fixek és adottak, addig a körök dinamikusan változnak a program futása során, minden szálon külön-külön. Vagyis minden sázl birtokol és karbantart egy-egy edény tömböt. \par
+A könnyeb implementáláshoz létre lett hozva egy \textit{st\_pairs} tömb minden szálra. Ezek atömbök tartalmazzák prímek indexeit, valamint az aktuális, az adott szegmensbe való offsetüket, vagyis, hogy hova kell szitálniuk először az adott szegmensbe. 
 
-\subsection{Skálázhatóság} \label{scale}
+\subsection{Párhuzamos megvalósítás, skálázhatóság} \label{scale}
+
+
 
 \subsection{Tesztelés} \label{test}
 
-\subsection{Továbbfejlesztési lehetőségek}
+A tesztelést a \textbf{/test/} mappában található fájlok oldják meg. Egy fajta teszt létezik a programhoz, mégpedig egy rendszer teszt. Ez azt vizsgálja, hogy az adott paraméterekkel indított szitáló algoritmus megtalálja-e a megfelelő prímszámokat, és csak azokat találja-e meg. Ehhez szükség van egy referencia megoldásra, amit a \textit{/test/primes.txt} szövegfájlban találhatunk. \par
+ Tartozik a tesztelő programhoz egy \textit{Testcase\_generator} osztály is, ami elkészíti a beállításoknak megfelelő teszteket. A tesztelő programban be lehet állítani, hogy melyik intervallumot szitálja, valamint a használt szegmens szám és szál számokra egy intervallum, amiben a generátor legyártja a köztes teszteseteket, amit majd a tesztelő fog futtatni.
 
 \clearpage
 \section{Az algoritmusok összehasonlítása}

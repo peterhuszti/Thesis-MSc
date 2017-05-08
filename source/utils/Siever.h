@@ -22,14 +22,15 @@
 #define P2I(p) ((p)>>1) // (((p-2)>>1)) 
 #define I2P(i) (((i)<<1)+1) // ((i)*2+3)
 
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#define MIN(a,b) ((a)<(b)?(a):(b))
 
 #define DEBUG true // true if we want to print debug info
 #define PRIMES true // true if we want to show the found primes
  
 typedef uint64_t prime_t;
 typedef uint64_t word_t;
-typedef uint16_t offset_t; // TODO: check the max size of this
+typedef uint16_t offset_t;
 typedef prime_t circle_t;
 typedef prime_t bucket_t;
 
@@ -192,6 +193,7 @@ public:
 		for (size_t i=0; i<number_of_threads; i++) delete[] buckets[i];
 		delete[] buckets;
 		delete[] st;
+		for (size_t i=0; i<number_of_threads; i++) delete[] st_pairs[i];
 		delete[] st_pairs;
 	}
 
@@ -253,10 +255,11 @@ public:
 				for (size_t chunk_id=0; chunk_id<params[thread_id].chunk_per_thread; ++chunk_id) // iterate through the chunks
 				{
 					bool last_chunk = (chunk_id == params[thread_id].chunk_per_thread - 1);
-					for (size_t circle_id = 0; circle_id < number_of_circles; ++circle_id) // iterate through circles
+					for (circle_t circle_id = 0; circle_id < number_of_circles; ++circle_id) // iterate through circles
 					{
-						std::cout << "CIRCLE:   " << this->circles[circle_id] << std::endl << std::flush;
-						std::pair<bucket_t,bucket_t> actual_bucket = getActualBucket(thread_id, circle_id);
+				//		std::cout << "CIRCLE:   " << this->circles[circle_id] << std::endl << std::flush;
+						std::pair<bucket_t,bucket_t> actual_bucket = get_actual_bucket(thread_id, circle_id);
+				//		std::cout << "ACTUAL BUCKET:   " << actual_bucket.first << "   " << actual_bucket.second << std::endl << std::flush;
 						bool broken_bucket = actual_bucket.first > actual_bucket.second;
 						size_t start, end;
 
@@ -277,15 +280,15 @@ public:
 								end = actual_bucket.second;
 							}					
 						}
-std::cout << start << "   " << end << std::endl << std::flush;
+//std::cout << start << "   " << end << std::endl << std::flush;
 						for (size_t index=start; index < end; ++index) // start from 1 if 1 is in primes
 						{
 							if (!GET( this->st, this->st_pairs[thread_id][index].prime_index )) // if it's a prime, then we sieve
 							{					
 								prime_t p = I2P(this->st_pairs[thread_id][index].prime_index); // the prime in dec
-								std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
+							//	std::cout << "SIEVING WITH:  " << p << std::endl << std::flush;
 								prime_t offset = this->st_pairs[thread_id][index].offset; // get the offset of the current prime in the actual chunk
-								std::cout << "OFFSET:  " << offset << std::endl << std::flush;
+							//	std::cout << "OFFSET:  " << offset << std::endl << std::flush;
 								while (offset < this->chunk_bits) // while we are in the chunk
 								{								
 									SET(this->chunks[params[thread_id].first_chunk_to_sieve + chunk_id], offset); // mark as composite
@@ -300,7 +303,7 @@ std::cout << start << "   " << end << std::endl << std::flush;
 						}
 						if (broken_bucket) // we must sieve the bottom of the circle as well
 						{
-							std::cout << "    ***   BROKEN" << std::endl << std::flush;
+				//			std::cout << "    ***   BROKEN" << std::endl << std::flush;
 								// from 0 to actual_bucket.second
 						}
 					}
@@ -338,7 +341,7 @@ private:
 				{
 					prime_t p = I2P(i); // the prime in dec
 					prime_t q = I2P(params[j].starting_point);  // the first number in the chunk
-std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
+//std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 					st_pairs[j][i-1].offset = negmodp2I(q, p); // calculate offset in the actual chunk
 				}
 			}
@@ -358,11 +361,11 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 	*/
 	void init_circles()
 	{
-		word_t temp = chunk_size;
+		word_t temp = chunk_bits;
 		for (size_t i=0; i<number_of_circles; ++i)
 		{
-			circles[i] = MAX(temp, nbits);
-			temp += chunk_size;
+			circles[i] = MIN(temp, nbits);
+			temp += chunk_bits;
 		}
 	}
 	
@@ -381,10 +384,10 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 		
 			size_t p = 0;
 			size_t b = 1;
-			for (size_t circle_id=1; circle_id<number_of_circles; ++circle_id)
+			for (circle_t circle_id=1; circle_id<number_of_circles; ++circle_id)
 			{
 				word_t temp = chunk_bits;
-				for (size_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
+				for (bucket_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
 				{
 					for (; p < circles[circle_id] && st_pairs[j][p].offset < temp; ++p) { }
 					buckets[j][b++] = p-1;
@@ -398,18 +401,18 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 					temp += chunk_bits;
 				}
 			}		
-			for (int i=0;i<number_of_buckets;i++)
-			{ std::cout << " BUCKETS: " << buckets[j][i] << std::endl;}
+	//		for (int i=0;i<number_of_buckets;i++)
+	//		{ std::cout << " BUCKETS: " << buckets[j][i] << std::endl;}
 		}
 	}
 	
 	/**
 		Returns the actual sieving bucket.
 	*/
-	std::pair<bucket_t,bucket_t> getActualBucket(size_t thread_id, size_t circle_id)
+	inline std::pair<bucket_t,bucket_t> get_actual_bucket(size_t thread_id, circle_t circle_id)
 	{
-		bool found = false;
-		size_t index = 0;
+		/*bool found = false;
+		bucket_t index = 0;
 		while (!found && index<number_of_buckets)
 		{
 			if (buckets[thread_id][index] > circles[circle_id])
@@ -420,9 +423,11 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 		}
 		bucket_t end = buckets[thread_id][index];
 		bucket_t last_bucket_in_circle = buckets[thread_id][buckets[thread_id][circle_id*(circle_id+1)/2+circle_id]];
-		bucket_t start = end > last_bucket_in_circle ? last_bucket_in_circle : circle_id-1;
+		bucket_t start = end > last_bucket_in_circle ? last_bucket_in_circle : circles[circle_id-1];
 		
-		return std::pair<bucket_t,bucket_t> (start, end);
+		return std::pair<bucket_t,bucket_t> (start, end);*/
+		return std::pair<bucket_t,bucket_t> (buckets[thread_id][circle_id*(circle_id+1)/2], 
+											 circle_id*(circle_id+1)/2+circle_id);
 	}
 	
 	/**
@@ -430,9 +435,28 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 	*/
 	void update_buckets(size_t thread_id)
 	{
-		// vegig megyek a circleken
-		// veszem az act [0-1] bucketet
-		// elindulok az aljarol, ha offset < chunk_bits -> at kell tenni kovi bucketbe
+		for (circle_t circle_id=0; circle_id<number_of_circles; ++circle_id)
+		{
+			auto actual_bucket = get_actual_bucket(thread_id, circle_id);
+			bool stay = false;
+			bucket_t index = actual_bucket.first;
+			bucket_t end = actual_bucket.second;
+			while (!stay && index <= end)
+			{
+				stay = st_pairs[thread_id][index].offset < chunk_bits;
+				index++;
+			}
+			bucket_t first_bucket_in_circle = circle_id*(circle_id+1)/2;
+			buckets[thread_id][first_bucket_in_circle] = index-1;
+			
+			bucket_t last_bucket_in_circle = first_bucket_in_circle + circle_id;
+			bucket_t temp = buckets[thread_id][last_bucket_in_circle];
+			for (bucket_t bucket_id=last_bucket_in_circle; bucket_id>first_bucket_in_circle+1; --bucket_id)
+			{
+				buckets[thread_id][bucket_id] = buckets[thread_id][bucket_id-1];
+			}
+			buckets[thread_id][first_bucket_in_circle+1] = temp;
+		}	
 	}
 	
 	/**
@@ -454,11 +478,20 @@ std::cout <<"ASD " << p << "    "<<  negmodp2I(q, p) <<std::endl;
 
 
 
-/*
 
-TODO: 
-	update: alulrol elindulok, amik maradnak ujra szitalashoz, azok mennek a bucket vegere, 
-	kovi bucket elejet lejjebb hozom, aztan a bucketeket korbeforgatom.
-*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

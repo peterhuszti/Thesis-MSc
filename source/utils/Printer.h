@@ -66,10 +66,12 @@ public:
 		for (size_t j=0; j<siever->number_of_chunks; ++j)
 		{
 			for (size_t i=0; i<siever->chunk_bits; ++i)
+			{
 				if (!GET( siever->chunks[j], i )) 
 				{
 					primes.push_back(I2P(i + chunk_base_temp));
-				}			
+				}
+			}
 			chunk_base_temp += siever->chunk_bits;
 		}
 		
