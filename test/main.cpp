@@ -32,8 +32,9 @@ int main(int argc, char *argv[])
 
 	std::cout << "Generating testcases.....\n" << std::flush;
 //	Testcase_generator generator(65536, 131072, 1, 128, 1, 16);
-	Testcase_generator generator(2048, 4096, 64, 64, 1, 1);
-	//Testcase_generator generator(65536, 131072, 512, 512, 1, 1);
+	//Testcase_generator generator(2048, 4096, 64, 64, 1, 1);
+	Testcase_generator generator(65536, 131072, 512, 512, 1, 1);
+	//Testcase_generator generator(1024, 2048, 64, 64, 1, 1);
 	
 	std::cout << "Running tests.....\n" << std::flush;
 	Testcase tc = generator.getTestcase(0);
@@ -119,7 +120,7 @@ bool compare(const std::vector<int> &real, const res &mine)
 		if (real[j] != mine.primes[i])
 		{
 			std::cout << "REAL:    " << real[j] << "\nFOUND: " << mine.primes[i] << std::endl << std::flush;
-			//equal = false;
+			equal = false;
 		}
 		if (real[j]==mine.primes[i]) {i++;j++;}
 		else if (real[j]>mine.primes[i]) i++;
