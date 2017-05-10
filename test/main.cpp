@@ -48,7 +48,7 @@ Siever siever(in);
 		std::cout << "    lower bound: " << tc.lower_bound;
 		std::cout << "    upper bound: " << tc.upper_bound;
 		std::cout << "    number of chunks: " << tc.chunks;
-		std::cout << "    number of threads: " << tc.threads << "\n" << std::flush;
+		std::cout << "    number of threads: " << tc.threads << "\n";
 		
 		if(!compare(real_results, start(tc,&siever)))
 		{
@@ -58,11 +58,11 @@ Siever siever(in);
 	
 	if(fail)
 	{
-		std::cout << "\n\n\n*** The tests failed! ***\n\n\n" << std::flush;
+		std::cout << "\n\n\n*** The tests failed! ***\n\n\n";
 	}
 	else
 	{
-		std::cout << "\n\n\n*** The tests passed! ***\n\n\n" << std::flush;
+		std::cout << "\n\n\n*** The tests passed! ***\n\n\n";
 	}
 	
 	return 0;
@@ -75,14 +75,18 @@ res start(const Testcase& tc, Siever* siever)
 	
 	Siever siever(in);
 */
+	Printer printer(siever, "../test/result.txt");
 	siever->soe_init();
+	
+	printer.print_debug_info();
+	
 	siever->soe_chunks();
 
-	Printer printer(siever, "../test/result.txt");
+	
 	printer.print_sieving_table();
 	printer.print_primes_found();
-	printer.print_debug_info();
 	//return res(printer.get_primes_found(), in.low, in.up);
+	printer.print_number_of_found_primes();
 	return res(printer.get_primes_found(), tc.lower_bound, tc.upper_bound);
 }
 
@@ -104,10 +108,10 @@ std::vector<int> read_real_results()
 }
 
 bool compare(const std::vector<int> &real, const res &mine)
-{
+{std::cout <<"ASD";
 	if (mine.primes.size() == 0)
 	{
-		std::cout << "        ## NO RESULTS ##\n" << std::flush;
+		std::cout << "        ## NO RESULTS ##\n";
 		return false;
 	}
 
@@ -119,7 +123,7 @@ bool compare(const std::vector<int> &real, const res &mine)
 	{
 		if (real[j] != mine.primes[i])
 		{
-			std::cout << "REAL:    " << real[j] << "\nFOUND: " << mine.primes[i] << std::endl << std::flush;
+			std::cout << "REAL:    " << real[j] << "\nFOUND: " << mine.primes[i] << std::endl;
 			equal = false;
 		}
 		if (real[j]==mine.primes[i]) {i++;j++;}
@@ -129,11 +133,11 @@ bool compare(const std::vector<int> &real, const res &mine)
 	
 	if (equal)
 	{
-		std::cout << "        ## PASSED ##\n" << std::flush;
+		std::cout << "        ## PASSED ##\n";
 	}
 	else
 	{
-		std::cout << "        ## FAILED ##\n" << std::flush;
+		std::cout << "        ## FAILED ##\n";
 	}
 	
 	return equal;

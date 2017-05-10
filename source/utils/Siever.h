@@ -273,7 +273,7 @@ public:
 						if (circle_id == 0)
 						{
 							start = 0;
-							end = I2P(nbits);	
+							end = circles[circle_id];	
 						}
 						else
 						{
@@ -291,14 +291,14 @@ public:
 							std::cout << start << "   " << end << std::endl << std::flush;
 						#endif
 						
-						Sieve(thread_id, chunk_id, params, start, end);
+						Sieve(thread_id, chunk_id, circle_id, params, start, end);
 						if (broken_bucket) // we must sieve the bottom of the circle as well
 						{
 							std::cout << "    ***   BROKEN" << std::endl << std::flush;
 								// from 0 to actual_bucket.second
 							start = this->circles[circle_id]+1;
 							end = actual_bucket.second;
-							Sieve(thread_id, chunk_id, params, start, end);
+							Sieve(thread_id, chunk_id, circle_id, params, start, end);
 						}
 					}
 					if (!last_chunk)
@@ -325,7 +325,7 @@ private:
 	/**
 		Sieve with the given bucket
 	*/
-	void Sieve(size_t thread_id, size_t chunk_id, const std::vector<Params_for_threads> &params, size_t start, size_t end)
+	void Sieve(size_t thread_id, size_t chunk_id, circle_t circle_id, const std::vector<Params_for_threads> &params, size_t start, size_t end)
 	{
 		for (size_t index=P2I(start); index<P2I(end)-1; ++index) // start from 1 if 1 is in primes
 		{
@@ -351,10 +351,12 @@ private:
 						std::cout << "SIEVED OUT " << I2P(chunk_base+(chunk_bits*chunk_id) + offset) << std::endl << std::flush;
 					#endif
 					
+					if ( (I2P(chunk_base+(chunk_bits*chunk_id) + offset)/p) *p != I2P(chunk_base+(chunk_bits*chunk_id) + offset)) std::cout << "FAIL\n";
+					
 					offset += p; // next multiplier
 				}
 				
-				update_offset(thread_id, index, offset);
+				update_offset(thread_id, circle_id, index, offset);
 			}							
 		}
 	}
@@ -392,13 +394,14 @@ private:
 	/**
 		Updates the offset table for the next chunk.
 	*/
-	void update_offset(size_t thread_id, size_t index, prime_t last_offset)
+	void update_offset(size_t thread_id, circle_t circle_id, size_t index, prime_t last_offset)
 	{		
 		if (!GET( st, st_pairs[thread_id][index].prime_index )) st_pairs[thread_id][index].offset = last_offset - chunk_bits;
 		
+			
 			for (int i=0; i<nbits; ++i)
 			{
-				std::cout << "____ " << I2P(i) << " " << I2P(st_pairs[0][i].prime_index)<< " " << st_pairs[0][i].offset << " "   <<std::endl << std::flush;
+				std::cout << "____ " << I2P(i) << " " << I2P(st_pairs[0][i].prime_index)<< " " << st_pairs[0][i].offset << "  "   <<std::endl << std::flush;
 			}
 		
 		#if DEBUG
@@ -566,6 +569,8 @@ private:
 	*/
 	void update_buckets(size_t thread_id)
 	{
+	/*	
+		
 		for (circle_t circle_id=1; circle_id<number_of_circles; ++circle_id)
 		{
 			auto actual_bucket = get_actual_bucket(thread_id, circle_id);
@@ -579,7 +584,7 @@ private:
 				stay = st_pairs[thread_id][index].offset < limit; 
 				index++;
 			}
-			if (actual_bucket.first > end)
+			if (!stay && actual_bucket.first > end)
 			{
 				index = circles[circle_id];
 				while (!stay && index < end)
@@ -606,7 +611,82 @@ private:
 				buckets[thread_id][bucket_id] = buckets[thread_id][bucket_id-1];
 			}
 			buckets[thread_id][first_bucket_in_circle+1] = temp;
-		}	
+		}	*/
+		std::vector<std::vector<int> > which_bucket(number_of_threads);
+		for (int i=0; i<number_of_threads; ++i)
+		{
+			which_bucket[i].resize(nbits-1, -1);
+		}
+		
+		for (size_t thread_id=0; thread_id<number_of_threads; ++thread_id)
+		{
+			for (int i=0; i<nbits; ++i)
+			{
+				for (int j=0; j<number_of_circles; ++j)
+				{
+					if (st_pairs[thread_id][i].offset > j*I2P(chunk_bits))
+					{
+						which_bucket[thread_id][i] = j;
+					}
+				}
+		//		if (st_pairs[thread_id][i].offset) st_pairs[thread_id][i].offset -= which_bucket[thread_id][i]*I2P(chunk_bits);
+			}
+		}
+		
+		sort_b(which_bucket);
+		
+		for (size_t j=0; j<number_of_threads; ++j) // for all threads
+		{
+			buckets[j][0] = circles[0]; // the first bucket is equals to the first circle everytime
+		
+			size_t b = 1;
+			for (circle_t circle_id=1; circle_id<number_of_circles; ++circle_id)
+			{
+				size_t p = circles[circle_id-1];
+				word_t temp = I2P(chunk_bits);
+				for (bucket_t bucket_id=0; bucket_id<circle_id+1; ++bucket_id)
+				{
+					while (p < circles[circle_id]) 
+					{
+						#if DEBUG
+							std::cout << "*** " << P2I(p) << " " << circles[circle_id] << " "  << st_pairs[j][P2I(p)-1].offset << " " << temp << std::endl <<std::flush; 
+						#endif
+						
+						if (!GET( st, P2I(p) ))
+						{
+							#if DEBUG
+								std::cout << "   PRIME " << std::endl << std::flush;
+							#endif
+								
+							if (st_pairs[j][P2I(p)-1].offset >= temp)
+							{
+								break;
+							}
+						}
+						p++;
+					}
+					// iterate through the primes until either we reach the end of the current circle,
+					// or the offset indicates that we won't sieve into the next bucket
+					buckets[j][b++] = p-1;
+					if (bucket_id != 0)
+					{
+						for (size_t i=buckets[j][b-1]; i<buckets[j][b]; ++i)
+						{
+							st_pairs[j][i].offset -= I2P(chunk_bits); 
+							// reset the offsets so we can roll the circles easier
+						}
+					}
+					buckets[j][b] = buckets[j][b]%I2P(nbits);
+					temp += I2P(chunk_bits);
+				}
+		//		for (size_t prime=circle_id*(circle_od+1)/2; prime<)
+			}
+		}
+			#if DEBUG
+		std::cout << " UPDATE BUCKETS: " << std::endl;
+			for (int i=0;i<number_of_buckets;i++)
+				{ std::cout << " BUCKETS: " << buckets[0][i] << std::endl;}
+		#endif
 	}
 	
 	/**
