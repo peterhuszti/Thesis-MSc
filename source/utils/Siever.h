@@ -267,7 +267,7 @@ public:
 						std::cout << "ACTUAL BUCKET:   " << actual_bucket.first << "   " << actual_bucket.second << std::endl << std::flush;
 						#endif
 						
-						bool broken_bucket = actual_bucket.first > actual_bucket.second;
+						bool broken_bucket = (circle_id != 0 && actual_bucket.first == this->circles[circle_id-1]);
 						size_t start, end;
 
 						if (circle_id == 0)
@@ -278,13 +278,7 @@ public:
 						else
 						{
 							start = actual_bucket.first;
-							if (broken_bucket) // if the bucket is broken, then we start sieving until the top of the circle
-							{
-								end = this->circles[circle_id];
-							}
-							{
-								end = actual_bucket.second;
-							}					
+							end = actual_bucket.second;				
 						}
 							
 						#if DEBUG
@@ -293,11 +287,15 @@ public:
 						
 						Sieve(thread_id, chunk_id, circle_id, params, start, end);
 						if (broken_bucket) // we must sieve the bottom of the circle as well
-						{
-							std::cout << "    ***   BROKEN" << std::endl << std::flush;
-								// from 0 to actual_bucket.second
-							start = this->circles[circle_id]+1;
-							end = actual_bucket.second;
+						{							
+							start = this->circles[circle_id];
+							end = this->circles[circle_id*(circle_id+1)/2+circle_id];
+							
+							#if DEBUG
+								std::cout << "    ***   BROKEN" << std::endl << std::flush;
+								std::cout << start << "   " << end << std::endl << std::flush;
+							#endif
+							
 							Sieve(thread_id, chunk_id, circle_id, params, start, end);
 						}
 					}
@@ -565,10 +563,10 @@ private:
 	/**
 		Returns the actual sieving bucket.
 	*/
-	inline std::pair<bucket_t,bucket_t> get_actual_bucket(size_t thread_id, circle_t circle_id)
+	std::pair<bucket_t,bucket_t> get_actual_bucket(size_t thread_id, circle_t circle_id)
 	{
-		return std::pair<bucket_t,bucket_t> (buckets[thread_id][circle_id*(circle_id+1)/2-1], 
-											 buckets[thread_id][circle_id*(circle_id+1)/2]);
+		bucket_t start = MAX(buckets[thread_id][circle_id*(circle_id+1)/2-1], circles[circle_id-1]);
+		return std::pair<bucket_t,bucket_t> (start, buckets[thread_id][circle_id*(circle_id+1)/2]);
 	}
 	
 	/**
@@ -593,6 +591,14 @@ private:
 			{
 				end = actual_bucket.second;
 				size = end - start;
+			}
+			
+			bool first_bucket = true;
+			circle_t first = circle_id*(circle_id+1)/2;
+			circle_t last = first+circle_id;
+			for (bucket_t b=first; b<last; ++b)
+			{
+				if (buckets[thread_id][b] < start) first_bucket = false;
 			}
 			
 			std::vector<int> which_bucket(size-1, -1);
@@ -646,14 +652,22 @@ private:
 						p++;
 						break;
 					}
+					if (which_bucket[p-start] == circle_id)
+					{	
+					std::cout << "   BREAK " << std::endl << std::flush;
+						if (first_bucket)
+						{
+							buckets[thread_id][last] = p;
+							first_bucket = false;
+						}
+					}
 				}
 				p++;
 			}
 			// iterate through the primes until either we reach the end of the current circle,
 			// or the offset indicates that we won't sieve into the next bucket
-			//if (p >= circles[circle_id]) buckets[thread_id][b] = p;
-			//else buckets[thread_id][b] = p-1;
-			buckets[thread_id][circle_id*(circle_id+1)/2] = p-1;
+			std::cout << first << "  " <<p-1<< std::endl;
+			buckets[thread_id][first] = p-1;
 			
 			for (size_t i=start; i<end; ++i)
 			{
@@ -664,21 +678,34 @@ private:
 				// reset the offsets so we can roll the circles easier
 			}
 		}
-		
-		// HA BROKEN, akkor az uccso bucketet beallitani
-		//	--||--	, akkor ez elso darabot is updatelni
-		// forgatni a circlet
-		
+
 			#if DEBUG
 		std::cout << " UPDATE BUCKETS: " << std::endl;
 			for (int i=0;i<number_of_buckets;i++)
 				{ std::cout << " BUCKETS: " << buckets[0][i] << std::endl;}
 				
-							for (int i=0; i<nbits; ++i)
+			for (int i=0; i<nbits; ++i)
 			{
 				std::cout << "____ " << i << " " << I2P(st_pairs[0][i].prime_index)<< " " << st_pairs[0][i].offset << " "  <<std::endl << std::flush;
 			}
 		#endif
+		
+		for (circle_t circle_id=1; circle_id<number_of_circles; ++circle_id)
+		{
+			circle_t first = circle_id*(circle_id+1)/2;
+			circle_t last = first+circle_id;
+			
+			bucket_t temp = buckets[thread_id][first];
+			for (size_t bucket_id=first; bucket_id<last; ++bucket_id)
+			{
+				std::cout << buckets[thread_id][bucket_id] << "  ->  " << buckets[thread_id][bucket_id+1]<< std::endl;;
+				buckets[thread_id][bucket_id] = buckets[thread_id][bucket_id+1];
+			}
+			buckets[thread_id][last] = temp;
+			std::cout << buckets[thread_id][last] << "->" << temp << std::endl;
+		}
+					for (int i=0;i<number_of_buckets;i++)
+				{ std::cout << " BUCKETS: " << buckets[0][i] << std::endl;}
 	}
 	
 	/**
